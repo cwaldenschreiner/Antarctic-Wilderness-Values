@@ -1,0 +1,23 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "McMurdo footprint", "activity_type": "building", "year": 2020},
+      "geometry": {"type": "Point", "coordinates": [166.669, -77.846]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Palmer footprint", "activity_type": "building", "year": 2021},
+      "geometry": {"type": "Point", "coordinates": [-64.050, -64.774]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Peninsula track", "activity_type": "traverse", "year": 2023},
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [[-61.5, -64.8], [-62.0, -64.9]]
+      }
+    }
+  ]
+}
