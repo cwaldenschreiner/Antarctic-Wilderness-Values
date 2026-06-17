@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Visit 2020 McMurdo", "year": 2020},
+      "geometry": {"type": "Point", "coordinates": [166.7, -77.85]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Visit 2022 Palmer", "year": 2022},
+      "geometry": {"type": "Point", "coordinates": [-64.05, -64.77]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Visit 2024 Neko", "year": 2024},
+      "geometry": {"type": "Point", "coordinates": [-62.53, -64.83]}
+    }
+  ]
+}

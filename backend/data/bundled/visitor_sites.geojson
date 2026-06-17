@@ -1,0 +1,20 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "Port Lockroy", "activity_type": "visitor_site", "duration": "transient", "year": 2023},
+      "geometry": {"type": "Point", "coordinates": [-61.525, -64.825]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Neko Harbour", "activity_type": "visitor_site", "duration": "transient", "year": 2024},
+      "geometry": {"type": "Point", "coordinates": [-62.528, -64.833]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Deception Island", "activity_type": "visitor_site", "duration": "transient", "year": 2022},
+      "geometry": {"type": "Point", "coordinates": [-60.597, -62.933]}
+    }
+  ]
+}

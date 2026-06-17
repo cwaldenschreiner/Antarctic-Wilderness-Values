@@ -1,0 +1,85 @@
+{
+  "layers": [
+    {
+      "id": "building_footprints",
+      "name": "Building Footprints (Research Stations)",
+      "source": "COMNAP / Demo subset",
+      "license": "Demo data for illustration",
+      "vintage": "2024",
+      "crs": "EPSG:4326",
+      "description": "Permanent research station building footprints for isolation-from-infrastructure indicator.",
+      "citation": "Summerson & Bishop (2012); IP 39 (2013)",
+      "tabs": ["remoteness", "wildness"]
+    },
+    {
+      "id": "linear_corridors",
+      "name": "Human-made Linear Corridors",
+      "source": "Demo / traverse routes",
+      "license": "Demo",
+      "vintage": "2024",
+      "crs": "EPSG:4326",
+      "description": "Traverse routes and resupply corridors (1-2 km impact distance).",
+      "citation": "IP 39 Table 1",
+      "tabs": ["remoteness"]
+    },
+    {
+      "id": "visitor_sites",
+      "name": "Coastal Visitor Sites",
+      "source": "IAATO-style demo",
+      "license": "Demo",
+      "vintage": "2024",
+      "crs": "EPSG:4326",
+      "description": "Existing coastal tourism landing sites.",
+      "citation": "ANT-MICI indicator framework",
+      "tabs": ["remoteness", "wildness"]
+    },
+    {
+      "id": "human_footprints",
+      "name": "Human Activity Footprints",
+      "source": "Cumulative activity demo",
+      "license": "Demo",
+      "vintage": "2024",
+      "crs": "EPSG:4326",
+      "description": "Extent and distribution of human activities for pristineness.",
+      "citation": "Hughes et al. (2011); Leihy et al. (2020)",
+      "tabs": ["pristineness"]
+    },
+    {
+      "id": "visitation_records",
+      "name": "Visitation Records",
+      "source": "Demo visitation points",
+      "license": "Demo",
+      "vintage": "2020-2024",
+      "crs": "EPSG:4326",
+      "description": "Recorded human visitation for inviolate area analysis.",
+      "citation": "Hughes et al. (2011)",
+      "tabs": ["pristineness"]
+    },
+    {
+      "id": "rema_dem",
+      "name": "REMA DEM",
+      "source": "Howat et al. (2022)",
+      "license": "REMA",
+      "vintage": "2022",
+      "crs": "EPSG:3031",
+      "description": "Reference Elevation Model of Antarctica for viewshed analysis. Synthetic DEM used when tiles unavailable.",
+      "citation": "Howat et al. 2022",
+      "tabs": ["wildness"]
+    }
+  ],
+  "references": [
+    "Summerson, R. (2012). Protection of Wilderness and Aesthetic Values in Antarctica.",
+    "Summerson, R. & Bishop, I.D. (2012). Polar Research, 31, 10858.",
+    "New Zealand (2013). ATCM XXXVI IP 39.",
+    "Kennicutt II, M.C. et al. (2010). Environ. Res. Lett. 5, 034010.",
+    "Leihy, R.I. et al. (2020). Nature.",
+    "Hughes, K.A. et al. (2011). Antarctic Science, 23(6), 537-548.",
+    "Howat, I. et al. (2022). REMA."
+  ],
+  "data_gaps": [
+    "Deep-field tourism sites — no freely available dataset",
+    "Soundscape — audibility distances not quantified",
+    "Night-sky light pollution at 50 km — not modelled",
+    "Station-specific pollutant thresholds — McMurdo only"
+  ]
+}

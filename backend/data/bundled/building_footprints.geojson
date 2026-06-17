@@ -1,0 +1,30 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"name": "McMurdo Station", "activity_type": "permanent_station", "duration": "permanent", "year": 2020},
+      "geometry": {"type": "Point", "coordinates": [166.669, -77.846]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Scott Base", "activity_type": "permanent_station", "duration": "permanent", "year": 2020},
+      "geometry": {"type": "Point", "coordinates": [166.764, -77.851]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Palmer Station", "activity_type": "permanent_station", "duration": "permanent", "year": 2021},
+      "geometry": {"type": "Point", "coordinates": [-64.050, -64.774]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Rothera Research", "activity_type": "permanent_station", "duration": "permanent", "year": 2019},
+      "geometry": {"type": "Point", "coordinates": [-68.127, -67.567]}
+    },
+    {
+      "type": "Feature",
+      "properties": {"name": "Marambio AWS", "activity_type": "aws", "duration": "permanent", "year": 2022},
+      "geometry": {"type": "Point", "coordinates": [-56.623, -64.240]}
+    }
+  ]
+}
