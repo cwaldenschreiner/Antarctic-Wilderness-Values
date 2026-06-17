@@ -1,0 +1,32 @@
+# Render Blueprint — ANT-MICI Antarctic Wilderness Values Dashboard
+# Deploy: Render Dashboard → New → Blueprint → connect this repo
+#
+# Creates two services:
+#   1. ant-mici-api      — FastAPI analytics (Docker)
+#   2. ant-mici-dashboard — React static site (proxied API via VITE_API_URL)
+
+services:
+  - type: web
+    name: ant-mici-api
+    runtime: docker
+    rootDir: backend
+    plan: starter
+    healthCheckPath: /api/health
+    dockerCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    buildCommand: python scripts/setup_basemap.py && python scripts/validate_geospatial.py
+    envVars:
+      - key: PYTHONPATH
+        value: /app
+
+  - type: web
+    name: ant-mici-dashboard
+    runtime: static
+    rootDir: frontend
+    buildCommand: chmod +x scripts/render-build.sh && ./scripts/render-build.sh
+    staticPublishPath: dist
+    envVars:
+      - key: API_HOST
+        fromService:
+          type: web
+          name: ant-mici-api
+          envVarKey: RENDER_EXTERNAL_URL
