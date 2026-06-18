@@ -17,6 +17,12 @@ services:
     envVars:
       - key: PYTHONPATH
         value: /app
+      - key: GRID_RES_M
+        value: "20000"
+      - key: MAX_GRID_CELLS
+        value: "120000"
+      - key: MAX_RASTER_DIM
+        value: "512"
 
   - type: web
     name: ant-mici-dashboard

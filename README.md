@@ -80,6 +80,7 @@ If you prefer creating services by hand, see the same layout in `render.yaml`:
 
 ### Render notes
 
+- **Memory:** Analytics auto-cap grid size (`MAX_GRID_CELLS`, default 150k). On Render, `render.yaml` sets coarser `GRID_RES_M=20000` (20 km cells).
 - **Cold starts:** Free/Starter services spin down when idle; first request may be slow.
 - **Uploads:** User uploads are stored on ephemeral disk unless you attach a [persistent disk](https://render.com/docs/disks) at `backend/data/uploads`.
 - **Memory:** Upgrade the API instance if raster analysis runs out of memory.

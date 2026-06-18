@@ -15,6 +15,7 @@ from app.analytics.constants import (
     REMOTENESS_RANK_LABELS,
     REMOTENESS_THRESHOLDS_KM,
 )
+from app.analytics.constants import DEFAULT_GRID_RES_M
 from app.analytics.raster_utils import (
     classify_remoteness_ranks,
     compute_area_stats,
@@ -23,6 +24,7 @@ from app.analytics.raster_utils import (
     get_analysis_extent,
     histogram_bins,
     load_bundled_geojson,
+    prepare_analysis_grid,
 )
 
 
@@ -50,7 +52,7 @@ def combined_remoteness_score(
     layers: dict[str, gpd.GeoDataFrame],
     year_min: int | None = None,
     year_max: int | None = None,
-    res_m: float = 1000,
+    res_m: float | None = None,
 ) -> dict[str, Any]:
     """
     Weighted combination of distance layers per IP 39 extent dimension.
@@ -58,34 +60,36 @@ def combined_remoteness_score(
     """
     filtered = {k: filter_gdf_by_year(v, year_min, year_max) for k, v in layers.items()}
     extent = get_analysis_extent(list(filtered.values()))
+    _, grid_res = prepare_analysis_grid(extent, res_m or DEFAULT_GRID_RES_M)
 
-    distance_layers: dict[str, np.ndarray] = {}
     weights: dict[str, float] = {}
     meta = None
+    score: np.ndarray | None = None
 
     for key, gdf in filtered.items():
         if gdf.empty:
             continue
         geoms = list(gdf.geometry)
         max_dist = _impact_radius(gdf) * 5
-        dist, meta = distance_raster_from_geoms(geoms, extent, res_m, max_dist_m=max_dist)
-        distance_layers[key] = dist
-        weights[key] = _layer_weight(gdf, key)
+        dist, meta = distance_raster_from_geoms(geoms, extent, grid_res, max_dist_m=max_dist)
+        w = _layer_weight(gdf, key)
+        weights[key] = w
+        dmax = float(np.max(dist)) or 1.0
+        normalized = (dist / dmax) * 100.0
+        if score is None:
+            score = (w * normalized).astype(np.float32)
+        else:
+            score += (w * normalized).astype(np.float32)
+        del dist
 
-    if not distance_layers:
+    if score is None:
         ny = nx = 100
         score = np.full((ny, nx), 100.0, dtype=np.float32)
         rank = np.zeros((ny, nx), dtype=np.int8)
-        meta = {"bounds": extent, "res_m": res_m, "width": nx, "height": ny}
+        meta = {"bounds": extent, "res_m": grid_res, "width": nx, "height": ny}
     else:
         total_w = sum(weights.values()) or 1.0
-        score = np.zeros_like(next(iter(distance_layers.values())), dtype=np.float32)
-        for key, dist in distance_layers.items():
-            w = weights[key] / total_w
-            # Normalize each layer 0-100 by its max
-            dmax = float(np.max(dist)) or 1.0
-            normalized = (dist / dmax) * 100.0
-            score += w * normalized
+        score /= total_w
         dist_km = score / 100.0 * max(REMOTENESS_THRESHOLDS_KM)
         rank = classify_remoteness_ranks(dist_km)
 
@@ -94,11 +98,11 @@ def combined_remoteness_score(
     return {
         "combined_remoteness_score": score,
         "remoteness_rank": rank,
-        "distance_layers": distance_layers,
         "meta": meta,
         "rank_stats": rank_stats,
         "histogram": histogram_bins(score, bins=20),
         "extent": extent,
+        "grid_res_m": grid_res,
     }
 
 

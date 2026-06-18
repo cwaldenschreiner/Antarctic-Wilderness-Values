@@ -7,14 +7,14 @@ from typing import Any
 import geopandas as gpd
 import numpy as np
 
+from app.analytics.constants import DEFAULT_GRID_RES_M
 from app.analytics.raster_utils import (
-    compute_area_stats,
     distance_raster_from_geoms,
     filter_gdf_by_year,
     get_analysis_extent,
     histogram_bins,
     load_bundled_geojson,
-    synthetic_dem,
+    prepare_analysis_grid,
 )
 
 
@@ -24,8 +24,7 @@ def compute_viewshed(
     visitor_sites: gpd.GeoDataFrame | None = None,
     year_min: int | None = None,
     year_max: int | None = None,
-    res_m: float = 2000,
-    dem: np.ndarray | None = None,
+    res_m: float | None = None,
 ) -> dict[str, Any]:
     """
     DEM-based line-of-sight viewshed union per IP 39 §6.
@@ -36,25 +35,29 @@ def compute_viewshed(
 
     gdfs = [g for g in [infra, visitors] if g is not None and not g.empty]
     extent = get_analysis_extent(gdfs if gdfs else [load_bundled_geojson("building_footprints")])
+    _, grid_res = prepare_analysis_grid(extent, res_m or DEFAULT_GRID_RES_M)
 
     visible = None
     meta = None
 
     if not infra.empty:
         infra_dist, meta = distance_raster_from_geoms(
-            list(infra.geometry), extent, res_m, max_dist_m=30_000
+            list(infra.geometry), extent, grid_res, max_dist_m=30_000
         )
-        visible_infra = np.clip(1.0 - infra_dist / 30_000, 0, 1)
-        visible = visible_infra
+        visible = np.clip(1.0 - infra_dist / 30_000, 0, 1).astype(np.float32)
+        del infra_dist
     else:
-        _, meta = distance_raster_from_geoms([], extent, res_m)
+        _, meta = distance_raster_from_geoms([], extent, grid_res)
 
     if not visitors.empty:
-        vis_dist, _ = distance_raster_from_geoms(
-            list(visitors.geometry), extent, res_m, max_dist_m=10_000
+        vis_dist, vis_meta = distance_raster_from_geoms(
+            list(visitors.geometry), extent, grid_res, max_dist_m=10_000
         )
-        visible_vis = np.clip(1.0 - vis_dist / 10_000, 0, 1)
+        if meta is None:
+            meta = vis_meta
+        visible_vis = np.clip(1.0 - vis_dist / 10_000, 0, 1).astype(np.float32)
         visible = visible_vis if visible is None else np.maximum(visible, visible_vis)
+        del vis_dist
 
     if visible is None:
         ny = int(meta["height"])
@@ -73,7 +76,8 @@ def compute_viewshed(
         "meta": meta,
         "histogram": histogram_bins(wildness_index, bins=20),
         "extent": extent,
-        "dem_used": "synthetic" if dem is not None else "rema",
+        "dem_used": "synthetic",
+        "grid_res_m": grid_res,
     }
 
 

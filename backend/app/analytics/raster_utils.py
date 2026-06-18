@@ -13,7 +13,13 @@ from pyproj import Transformer
 from shapely.geometry import Point, box, mapping, shape
 from shapely.ops import unary_union
 
-from app.analytics.constants import ANTARCTIC_BOUNDS, DEFAULT_GRID_RES_M, EPSG_ANTARCTIC
+from app.analytics.constants import (
+    DEFAULT_GRID_RES_M,
+    EPSG_ANTARCTIC,
+    EXTENT_PADDING_M,
+    MAX_GRID_CELLS,
+    MAX_RASTER_DIM,
+)
 
 DATA_DIR = Path(__file__).resolve().parents[2] / "data"
 
@@ -44,15 +50,47 @@ def parse_upload(content: bytes, filename: str) -> gpd.GeoDataFrame:
     return gdf.to_crs(EPSG_ANTARCTIC)
 
 
-def get_analysis_extent(gdfs: list[gpd.GeoDataFrame], padding_m: float = 50_000) -> tuple[float, float, float, float]:
+def get_analysis_extent(
+    gdfs: list[gpd.GeoDataFrame],
+    padding_m: float | None = None,
+) -> tuple[float, float, float, float]:
     """Return bounds in EPSG:3031."""
+    pad = EXTENT_PADDING_M if padding_m is None else padding_m
     valid = [g for g in gdfs if g is not None and not g.empty]
     if not valid:
-        # Default Antarctic Peninsula demo extent
-        return (-2_500_000, -1_500_000, 2_500_000, -500_000)
+        # Compact demo extent (Antarctic Peninsula / Weddell subset)
+        return (-1_200_000, -1_400_000, 800_000, -400_000)
     merged = pd_concat_geoms(valid)
     minx, miny, maxx, maxy = merged.total_bounds
-    return (minx - padding_m, miny - padding_m, maxx + padding_m, maxy + padding_m)
+    return (minx - pad, miny - pad, maxx + pad, maxy + pad)
+
+
+def effective_resolution(
+    bounds: tuple[float, float, float, float],
+    res_m: float,
+    max_cells: int | None = None,
+) -> float:
+    """Increase cell size until grid stays within memory budget."""
+    cap = max_cells or MAX_GRID_CELLS
+    minx, miny, maxx, maxy = bounds
+    width_m = maxx - minx
+    height_m = maxy - miny
+    if width_m <= 0 or height_m <= 0:
+        return res_m
+    cells = (width_m / res_m) * (height_m / res_m)
+    if cells <= cap:
+        return res_m
+    return max(res_m, ((width_m * height_m) / cap) ** 0.5)
+
+
+def prepare_analysis_grid(
+    bounds: tuple[float, float, float, float],
+    res_m: float | None = None,
+) -> tuple[tuple[float, float, float, float], float]:
+    """Return bounds and resolution capped for memory-safe analysis."""
+    res = res_m if res_m is not None else DEFAULT_GRID_RES_M
+    res = effective_resolution(bounds, res)
+    return bounds, res
 
 
 def pd_concat_geoms(gdfs: list[gpd.GeoDataFrame]) -> gpd.GeoDataFrame:
@@ -75,21 +113,20 @@ def distance_raster_from_geoms(
     max_dist_m: float | None = None,
 ) -> tuple[np.ndarray, dict[str, Any]]:
     """Compute minimum Euclidean distance raster from geometries."""
+    bounds, res_m = prepare_analysis_grid(bounds, res_m)
     xs, ys = make_grid(bounds, res_m)
     ny, nx = len(ys), len(xs)
-    xx, yy = np.meshgrid(xs, ys, indexing="ij")
-    points = np.column_stack([xx.ravel(), yy.ravel()])
+    fill = max_dist_m or 500_000.0
 
     if not geoms:
-        dist = np.full((ny, nx), max_dist_m or 500_000.0, dtype=np.float32)
+        dist = np.full((ny, nx), fill, dtype=np.float32)
         return dist, _meta(bounds, res_m, xs, ys)
 
     union = unary_union(geoms)
     if union.is_empty:
-        dist = np.full((ny, nx), max_dist_m or 500_000.0, dtype=np.float32)
+        dist = np.full((ny, nx), fill, dtype=np.float32)
         return dist, _meta(bounds, res_m, xs, ys)
 
-  # Sample-based distance for performance on moderate grids
     from scipy.spatial import cKDTree
 
     if union.geom_type in ("Point", "MultiPoint"):
@@ -100,14 +137,20 @@ def distance_raster_from_geoms(
         coords = _polygon_boundary_coords(union, step_m=res_m)
 
     if len(coords) == 0:
-        dist = np.full((ny, nx), max_dist_m or 500_000.0, dtype=np.float32)
+        dist = np.full((ny, nx), fill, dtype=np.float32)
         return dist, _meta(bounds, res_m, xs, ys)
 
-    tree = cKDTree(np.array(coords))
-    d, _ = tree.query(points, k=1)
-    dist = d.reshape(ny, nx).astype(np.float32)
+    tree = cKDTree(np.array(coords, dtype=np.float64))
+    dist = np.empty(ny * nx, dtype=np.float32)
+    xx, yy = np.meshgrid(xs, ys, indexing="xy")
+    points = np.column_stack([xx.ravel(), yy.ravel()])
+    chunk = 50_000
+    for start in range(0, len(points), chunk):
+        end = start + chunk
+        dist[start:end], _ = tree.query(points[start:end], k=1)
+    dist = dist.reshape(ny, nx)
     if max_dist_m:
-        dist = np.minimum(dist, max_dist_m)
+        np.minimum(dist, max_dist_m, out=dist)
     return dist, _meta(bounds, res_m, xs, ys)
 
 
@@ -157,6 +200,22 @@ def classify_remoteness_ranks(dist_km: np.ndarray) -> np.ndarray:
     return ranks
 
 
+def downsample_for_display(arr: np.ndarray, max_dim: int | None = None) -> np.ndarray:
+    """Shrink raster before colormap encoding to reduce peak memory."""
+    from PIL import Image
+
+    cap = max_dim or MAX_RASTER_DIM
+    ny, nx = arr.shape
+    if ny <= cap and nx <= cap:
+        return arr
+    scale = min(cap / ny, cap / nx)
+    new_w = max(1, int(nx * scale))
+    new_h = max(1, int(ny * scale))
+    img = Image.fromarray(np.asarray(arr, dtype=np.float32))
+    img = img.resize((new_w, new_h), Image.Resampling.BILINEAR)
+    return np.array(img, dtype=np.float32)
+
+
 def raster_to_png_bytes(arr: np.ndarray, cmap: str = "viridis", vmin=None, vmax=None) -> bytes:
     import matplotlib
 
@@ -165,7 +224,7 @@ def raster_to_png_bytes(arr: np.ndarray, cmap: str = "viridis", vmin=None, vmax=
     from matplotlib import cm
     from PIL import Image
 
-    data = np.array(arr, dtype=float)
+    data = downsample_for_display(np.asarray(arr, dtype=np.float32))
     if vmin is None:
         vmin = np.nanmin(data) if np.any(np.isfinite(data)) else 0
     if vmax is None:

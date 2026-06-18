@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import base64
+import gc
 import uuid
 from pathlib import Path
 from typing import Any
@@ -105,6 +106,7 @@ def analyze_remoteness(req: RemotenessRequest):
         "rank_stats": result["rank_stats"],
         "histogram": result["histogram"],
         "extent": result["extent"],
+        "grid_res_m": result.get("grid_res_m"),
         "combined_remoteness_score": {
             "png_base64": _encode_raster(result["combined_remoteness_score"], cmap="YlGn"),
             "meta": result["meta"],
@@ -115,6 +117,7 @@ def analyze_remoteness(req: RemotenessRequest):
         },
         "input_layers": {k: gdf_to_geojson_dict(v) for k, v in layers.items() if not v.empty},
     }
+    gc.collect()
     return response
 
 
@@ -123,11 +126,12 @@ def analyze_wildness(req: WildnessRequest):
     uploaded = _get_upload(req.upload_id)
     infra, visitors = default_wildness_layers(include_visitors=req.include_visitors, uploaded=uploaded)
     result = compute_viewshed(infra, visitor_sites=visitors, year_min=req.year_min, year_max=req.year_max)
-    return {
+    payload = {
         "visible_impact_pct": result["visible_impact_pct"],
         "histogram": result["histogram"],
         "extent": result["extent"],
         "dem_used": result["dem_used"],
+        "grid_res_m": result.get("grid_res_m"),
         "wildness_index": {
             "png_base64": _encode_raster(result["wildness_index"], cmap="Greens"),
             "meta": result["meta"],
@@ -137,6 +141,8 @@ def analyze_wildness(req: WildnessRequest):
             "meta": result["meta"],
         },
     }
+    gc.collect()
+    return payload
 
 
 @router.post("/analyze/pristineness")
@@ -150,10 +156,11 @@ def analyze_pristineness(req: PristinenessRequest):
         year_max=req.year_max,
         impact_threshold_m=req.impact_threshold_m,
     )
-    return {
+    payload = {
         "fragmentation": result["fragmentation"],
         "histogram": result["histogram"],
         "extent": result["extent"],
+        "grid_res_m": result.get("grid_res_m"),
         "pollutant_note": result["pollutant_note"],
         "pristineness_index": {
             "png_base64": _encode_raster(result["pristineness_index"], cmap="Blues"),
@@ -164,3 +171,5 @@ def analyze_pristineness(req: PristinenessRequest):
             "meta": result["meta"],
         },
     }
+    gc.collect()
+    return payload

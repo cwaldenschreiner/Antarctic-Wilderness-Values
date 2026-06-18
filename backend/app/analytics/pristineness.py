@@ -7,6 +7,7 @@ from typing import Any
 import geopandas as gpd
 import numpy as np
 
+from app.analytics.constants import DEFAULT_GRID_RES_M
 from app.analytics.raster_utils import (
     compute_fragmentation_stats,
     distance_raster_from_geoms,
@@ -14,6 +15,7 @@ from app.analytics.raster_utils import (
     get_analysis_extent,
     histogram_bins,
     load_bundled_geojson,
+    prepare_analysis_grid,
 )
 
 
@@ -23,7 +25,7 @@ def compute_pristineness(
     visitation: gpd.GeoDataFrame | None = None,
     year_min: int | None = None,
     year_max: int | None = None,
-    res_m: float = 1000,
+    res_m: float | None = None,
     impact_threshold_m: float = 5000,
 ) -> dict[str, Any]:
     """
@@ -35,6 +37,7 @@ def compute_pristineness(
 
     gdfs = [g for g in [activity, visits] if not g.empty]
     extent = get_analysis_extent(gdfs if gdfs else [load_bundled_geojson("human_footprints")])
+    _, grid_res = prepare_analysis_grid(extent, res_m or DEFAULT_GRID_RES_M)
 
     combined_geoms = []
     if not activity.empty:
@@ -43,14 +46,16 @@ def compute_pristineness(
         combined_geoms.extend(visits.geometry)
 
     if combined_geoms:
-        dist, meta = distance_raster_from_geoms(combined_geoms, extent, res_m, max_dist_m=impact_threshold_m * 3)
+        dist, meta = distance_raster_from_geoms(
+            combined_geoms, extent, grid_res, max_dist_m=impact_threshold_m * 3
+        )
     else:
-        dist, meta = distance_raster_from_geoms([], extent, res_m)
+        dist, meta = distance_raster_from_geoms([], extent, grid_res)
 
     inviolate_mask = (dist >= impact_threshold_m).astype(np.float32)
     pristineness_index = np.clip((dist / impact_threshold_m) * 100, 0, 100).astype(np.float32)
 
-    frag = compute_fragmentation_stats(inviolate_mask.astype(bool), res_m)
+    frag = compute_fragmentation_stats(inviolate_mask.astype(bool), grid_res)
 
     return {
         "inviolate_mask": inviolate_mask,
@@ -59,6 +64,7 @@ def compute_pristineness(
         "meta": meta,
         "histogram": histogram_bins(pristineness_index, bins=20),
         "extent": extent,
+        "grid_res_m": grid_res,
         "pollutant_note": "Air/water pollutant layers are placeholders (Kennicutt et al. 2010 McMurdo only).",
     }
 

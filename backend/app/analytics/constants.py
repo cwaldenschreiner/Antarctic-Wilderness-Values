@@ -1,5 +1,7 @@
 """IP 39 / Summerson analytical constants."""
 
+import os
+
 HIGH_IMPACT_DIST_M = 20_000
 MED_IMPACT_DIST_M = 5_000
 LINEAR_IMPACT_DIST_M = 2_000
@@ -42,4 +44,9 @@ DURATION_WEIGHT_TRANSIENT = 0.5
 
 ANTARCTIC_BOUNDS = (-180.0, -90.0, 180.0, -60.0)
 EPSG_ANTARCTIC = "EPSG:3031"
-DEFAULT_GRID_RES_M = 1000
+
+# Memory-safe defaults for cloud deploy (override via env on Render)
+DEFAULT_GRID_RES_M = float(os.getenv("GRID_RES_M", "15000"))
+MAX_GRID_CELLS = int(os.getenv("MAX_GRID_CELLS", "150000"))
+MAX_RASTER_DIM = int(os.getenv("MAX_RASTER_DIM", "512"))
+EXTENT_PADDING_M = float(os.getenv("EXTENT_PADDING_M", "100000"))
