@@ -49,9 +49,27 @@ curl https://ant-mici-api.onrender.com/api/health
 # → {"status":"ok"}
 ```
 
-Open the **ant-mici-dashboard** URL and run analysis on any tab.
+Open the **ant-mici-dashboard** URL (not the API URL) to use the interactive UI.
 
-### Manual Render setup (without Blueprint)
+The API root (`https://ant-mici-api.onrender.com/`) intentionally returns JSON — that is not the dashboard.
+
+### If `ant-mici-dashboard` is missing on Render
+
+1. In Render → your **Blueprint** → **Manual Sync** (after pulling latest `render.yaml` on `main`).
+2. Or create the static site manually:
+   - **New → Static Site** → same repo, branch `main`
+   - Root Directory: `frontend`
+   - Build Command: `chmod +x scripts/render-build.sh && ./scripts/render-build.sh`
+   - Publish Directory: `frontend/dist` (relative to repo root)
+   - Environment: `API_HOST` = your API URL (e.g. `https://ant-mici-api.onrender.com`)
+   - Add redirect/rewrite: `/*` → `/index.html` (SPA routing)
+
+### Verify deployment
+
+```bash
+curl https://ant-mici-api.onrender.com/api/health
+# → {"status":"ok"}
+```
 
 If you prefer creating services by hand, see the same layout in `render.yaml`:
 
