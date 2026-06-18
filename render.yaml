@@ -29,8 +29,8 @@ services:
     runtime: static
     rootDir: frontend
     buildCommand: chmod +x scripts/render-build.sh && ./scripts/render-build.sh
-    # Path is relative to REPO ROOT (not rootDir), so use frontend/dist
-    staticPublishPath: ./frontend/dist
+    # With rootDir: frontend, publish path is relative to that directory
+    staticPublishPath: dist
     routes:
       - type: rewrite
         source: /*

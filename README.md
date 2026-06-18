@@ -60,7 +60,7 @@ The API root (`https://ant-mici-api.onrender.com/`) intentionally returns JSON �
    - **New → Static Site** → same repo, branch `main`
    - Root Directory: `frontend`
    - Build Command: `chmod +x scripts/render-build.sh && ./scripts/render-build.sh`
-   - Publish Directory: `frontend/dist` (relative to repo root)
+   - Publish Directory: `dist` (when Root Directory is `frontend`)
    - Environment: `API_HOST` = your API URL (e.g. `https://ant-mici-api.onrender.com`)
    - Add redirect/rewrite: `/*` → `/index.html` (SPA routing)
 
