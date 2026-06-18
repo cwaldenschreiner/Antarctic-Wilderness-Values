@@ -29,6 +29,43 @@ Open http://localhost:5173
 docker-compose up --build
 ```
 
+## Deploy on Render
+
+One-click deploy via [Render Blueprint](https://render.com/docs/infrastructure-as-code):
+
+1. Push this repo to GitHub.
+2. In [Render](https://dashboard.render.com): **New → Blueprint**.
+3. Connect the repository and approve `render.yaml`.
+4. Wait for both services to deploy:
+   - **ant-mici-api** — FastAPI backend (Docker, Starter plan)
+   - **ant-mici-dashboard** — React static site
+
+The static site build script (`frontend/scripts/render-build.sh`) sets `VITE_API_URL` automatically from the API service URL.
+
+### Verify deployment
+
+```bash
+curl https://ant-mici-api.onrender.com/api/health
+# → {"status":"ok"}
+```
+
+Open the **ant-mici-dashboard** URL and run analysis on any tab.
+
+### Manual Render setup (without Blueprint)
+
+If you prefer creating services by hand, see the same layout in `render.yaml`:
+
+| Service | Type | Root | Build | Notes |
+|---------|------|------|-------|-------|
+| `ant-mici-api` | Web Service (Docker) | `backend` | `python scripts/setup_basemap.py && python scripts/validate_geospatial.py` | Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
+| `ant-mici-dashboard` | Static Site | `frontend` | `./scripts/render-build.sh` | Set `API_HOST` to API URL, or `VITE_API_URL=https://<api-host>/api` |
+
+### Render notes
+
+- **Cold starts:** Free/Starter services spin down when idle; first request may be slow.
+- **Uploads:** User uploads are stored on ephemeral disk unless you attach a [persistent disk](https://render.com/docs/disks) at `backend/data/uploads`.
+- **Memory:** Upgrade the API instance if raster analysis runs out of memory.
+
 ## Validation
 
 ```bash
