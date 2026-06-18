@@ -97,59 +97,93 @@ body {
 
 /* Home */
 .home-page {
-  padding: 1.5rem;
-  max-width: 1400px;
+  padding: 2rem 1.5rem 3rem;
+  max-width: 1280px;
   margin: 0 auto;
 }
 
-.home-hero {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 2rem;
-  margin-bottom: 2rem;
+.home-intro {
+  margin-bottom: 2.5rem;
+  max-width: 900px;
 }
 
-@media (max-width: 900px) {
-  .home-hero {
-    grid-template-columns: 1fr;
-  }
+.home-intro h1 {
+  font-size: 2.25rem;
+  margin: 0 0 0.75rem;
+  color: var(--ice);
+  line-height: 1.2;
 }
 
-.hero-text h1 {
+.home-diagram-showcase {
+  position: relative;
+  padding: 2.5rem 1.5rem 3rem;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: linear-gradient(165deg, rgba(19, 35, 55, 0.95) 0%, rgba(11, 29, 51, 0.98) 100%);
+  overflow: hidden;
+  min-height: 640px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.antarctica-watermark {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  opacity: 0.85;
+}
+
+.home-diagram-content {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 1100px;
+  text-align: center;
+}
+
+.home-diagram-content h2 {
   font-size: 1.75rem;
   margin: 0 0 0.5rem;
   color: var(--ice);
 }
 
-.subtitle {
-  color: var(--accent);
-  font-size: 0.9rem;
-  margin-bottom: 1rem;
-}
-
-.hero-text p {
-  line-height: 1.6;
+.diagram-caption {
   color: var(--muted);
-  font-size: 0.95rem;
-}
-
-.hero-map {
-  height: 320px;
-  border-radius: 12px;
-  overflow: hidden;
-  border: 1px solid var(--border);
-}
-
-.home-diagram h2 {
-  font-size: 1.25rem;
-  margin-bottom: 1rem;
-  color: var(--ice);
+  font-size: 1.05rem;
+  margin: 0 0 1.5rem;
 }
 
 .wilderness-diagram {
   width: 100%;
-  max-width: 900px;
-  border-radius: 12px;
+  max-width: 1100px;
+  height: auto;
+  margin: 0 auto;
+  display: block;
+  border-radius: 16px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.subtitle {
+  color: var(--accent);
+  font-size: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.home-intro p {
+  line-height: 1.7;
+  color: var(--muted);
+  font-size: 1.05rem;
+}
+
+.map-view--polar {
+  background: #0a1628;
+}
+
+.map-view--polar .maplibregl-canvas {
+  outline: none;
 }
 
 /* Analysis layout */
