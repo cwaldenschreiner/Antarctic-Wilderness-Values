@@ -126,6 +126,7 @@ export function RemotenessPage() {
       }
       layers={mapLayers}
       legend={legend}
+      viewResetKey={result ? JSON.stringify(result.extent) : undefined}
       charts={
         <>
           <RankBarChart stats={(result?.rank_stats as Record<string, number>) || {}} />

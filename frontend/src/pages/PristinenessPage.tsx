@@ -82,6 +82,7 @@ export function PristinenessPage() {
         { id: 'pristineness', label: 'Pristineness Index', color: '#60a5fa', visible: visible.pristineness, onToggle: () => setVisible((v) => ({ ...v, pristineness: !v.pristineness })) },
         { id: 'inviolate', label: 'Inviolate Mask', color: '#e2e8f0', visible: visible.inviolate, onToggle: () => setVisible((v) => ({ ...v, inviolate: !v.inviolate })) },
       ]}
+      viewResetKey={result ? JSON.stringify(result.extent) : undefined}
       charts={
         <>
           <div className="stat-cards">

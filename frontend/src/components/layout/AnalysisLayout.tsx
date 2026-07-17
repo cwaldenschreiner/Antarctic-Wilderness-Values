@@ -28,14 +28,15 @@ interface Props {
   charts: ReactNode;
   layers: LayerSpec[];
   legend: LegendItem[];
+  viewResetKey?: string | number;
 }
 
-export function AnalysisLayout({ title, controls, charts, layers, legend }: Props) {
+export function AnalysisLayout({ title, controls, charts, layers, legend, viewResetKey }: Props) {
   return (
     <div className="analysis-layout">
       <ControlPanel title={title}>{controls}</ControlPanel>
       <div className="map-column">
-        <MapView layers={layers} />
+        <MapView layers={layers} viewResetKey={viewResetKey} />
         <LayerLegend items={legend} />
       </div>
       <ChartPanel>{charts}</ChartPanel>
