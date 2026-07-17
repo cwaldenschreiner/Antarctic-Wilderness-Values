@@ -3,13 +3,16 @@
     {
       "id": "building_footprints",
       "name": "Building Footprints (Research Stations)",
-      "source": "COMNAP / Demo subset",
+      "source": "COMNAP / SCAR ADD \u2014 Demo subset",
       "license": "Demo data for illustration",
       "vintage": "2024",
       "crs": "EPSG:4326",
       "description": "Permanent research station building footprints for isolation-from-infrastructure indicator.",
       "citation": "Summerson & Bishop (2012); IP 39 (2013)",
-      "tabs": ["remoteness", "wildness"]
+      "tabs": [
+        "remoteness",
+        "wildness"
+      ]
     },
     {
       "id": "linear_corridors",
@@ -18,42 +21,54 @@
       "license": "Demo",
       "vintage": "2024",
       "crs": "EPSG:4326",
-      "description": "Traverse routes and resupply corridors (1-2 km impact distance).",
+      "description": "Traverse routes and resupply corridors (1\u20132 km impact distance).",
       "citation": "IP 39 Table 1",
-      "tabs": ["remoteness"]
+      "tabs": [
+        "remoteness"
+      ]
     },
     {
       "id": "visitor_sites",
-      "name": "Coastal Visitor Sites",
-      "source": "IAATO-style demo",
-      "license": "Demo",
-      "vintage": "2024",
+      "name": "ATS Land-based Visitor Sites",
+      "source": "Antarctic Treaty Secretariat (ATS)",
+      "license": "CC-BY-NC-4.0",
+      "vintage": "2019\u20132024",
       "crs": "EPSG:4326",
-      "description": "Existing coastal tourism landing sites.",
-      "citation": "ANT-MICI indicator framework",
-      "tabs": ["remoteness", "wildness"]
+      "n_features": 331,
+      "description": "All 331 ATS-reported coastal visitor sites with 5-year visit totals (2019/20\u20132023/24 seasons). Used for Remoteness and Wildness indicator scoring.",
+      "citation": "ATS Land-based Visited Sites, https://antarctictreaty.maps.arcgis.com",
+      "tabs": [
+        "remoteness",
+        "wildness"
+      ]
     },
     {
       "id": "human_footprints",
-      "name": "Human Activity Footprints",
-      "source": "Cumulative activity demo",
-      "license": "Demo",
-      "vintage": "2024",
+      "name": "Human Activity Footprints (Visitor Sites)",
+      "source": "Derived from ATS Visitor Sites \u2014 visit-weighted buffer polygons",
+      "license": "CC-BY-NC-4.0 (derived)",
+      "vintage": "2019\u20132024",
       "crs": "EPSG:4326",
-      "description": "Extent and distribution of human activities for pristineness.",
-      "citation": "Hughes et al. (2011); Leihy et al. (2020)",
-      "tabs": ["pristineness"]
+      "n_features": 331,
+      "description": "Impact footprint polygons derived from ATS visitor sites. Buffer radius (200\u20132000 m) scaled by log(total_visits_5yr). Used for Pristineness indicator.",
+      "citation": "ATS Visited Sites; Leihy et al. (2020) Nature 583:567\u2013571",
+      "tabs": [
+        "pristineness"
+      ]
     },
     {
       "id": "visitation_records",
-      "name": "Visitation Records",
-      "source": "Demo visitation points",
-      "license": "Demo",
-      "vintage": "2020-2024",
+      "name": "Annual Visitation Records by Site",
+      "source": "Antarctic Treaty Secretariat (ATS)",
+      "license": "CC-BY-NC-4.0",
+      "vintage": "2019\u20132024",
       "crs": "EPSG:4326",
-      "description": "Recorded human visitation for inviolate area analysis.",
-      "citation": "Hughes et al. (2011)",
-      "tabs": ["pristineness"]
+      "n_features": 743,
+      "description": "Per-season visitation records (site \u00d7 year) for 331 ATS visitor sites over 5 seasons. Only seasons with >0 visits included (743 records). Used for Pristineness inviolate area analysis.",
+      "citation": "ATS Land-based Visited Sites, https://antarctictreaty.maps.arcgis.com",
+      "tabs": [
+        "pristineness"
+      ]
     },
     {
       "id": "rema_dem",
@@ -63,8 +78,10 @@
       "vintage": "2022",
       "crs": "EPSG:3031",
       "description": "Reference Elevation Model of Antarctica for viewshed analysis. Synthetic DEM used when tiles unavailable.",
-      "citation": "Howat et al. 2022",
-      "tabs": ["wildness"]
+      "citation": "Howat, I. et al. (2022). REMA v4.1. Harvard Dataverse. https://doi.org/10.7910/DVN/X7NDNY",
+      "tabs": [
+        "wildness"
+      ]
     }
   ],
   "references": [
@@ -72,14 +89,16 @@
     "Summerson, R. & Bishop, I.D. (2012). Polar Research, 31, 10858.",
     "New Zealand (2013). ATCM XXXVI IP 39.",
     "Kennicutt II, M.C. et al. (2010). Environ. Res. Lett. 5, 034010.",
-    "Leihy, R.I. et al. (2020). Nature.",
-    "Hughes, K.A. et al. (2011). Antarctic Science, 23(6), 537-548.",
-    "Howat, I. et al. (2022). REMA."
+    "Leihy, R.I. et al. (2020). Antarctica's wilderness fails to capture continent's biodiversity. Nature 583:567\u2013571.",
+    "Hughes, K.A. et al. (2011). Antarctic Science, 23(6), 537\u2013548.",
+    "Howat, I. et al. (2022). REMA v4.1. Harvard Dataverse.",
+    "ATS Land-based Visited Sites (2021\u20132025). https://antarctictreaty.maps.arcgis.com"
   ],
   "data_gaps": [
-    "Deep-field tourism sites — no freely available dataset",
-    "Soundscape — audibility distances not quantified",
-    "Night-sky light pollution at 50 km — not modelled",
-    "Station-specific pollutant thresholds — McMurdo only"
+    "Deep-field tourism sites \u2014 no freely available dataset",
+    "Soundscape \u2014 audibility distances not quantified continent-wide",
+    "Night-sky light pollution at 50 km \u2014 not modelled",
+    "Station-specific pollutant thresholds \u2014 McMurdo only (Kennicutt et al. 2010)",
+    "Building footprints \u2014 COMNAP data requires institutional access; demo subset used"
   ]
 }
