@@ -182,8 +182,136 @@ body {
   background: #0a1628;
 }
 
+.map-view--interactive {
+  position: relative;
+}
+
 .map-view--polar .maplibregl-canvas {
   outline: none;
+}
+
+.map-toolbar {
+  position: absolute;
+  top: 0.75rem;
+  left: 0.75rem;
+  z-index: 20;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  max-width: calc(100% - 5rem);
+}
+
+.map-toolbar-group {
+  display: flex;
+  gap: 2px;
+  background: rgba(19, 35, 55, 0.94);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 3px;
+  backdrop-filter: blur(8px);
+}
+
+.map-toolbar button {
+  border: none;
+  background: transparent;
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.4rem 0.65rem;
+  border-radius: 6px;
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: inherit;
+}
+
+.map-toolbar button:hover:not(:disabled) {
+  color: var(--text);
+  background: var(--surface2);
+}
+
+.map-toolbar button.active {
+  color: var(--ice);
+  background: var(--accent);
+}
+
+.map-toolbar button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.map-selection-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(250, 204, 21, 0.15);
+  border: 1px solid #facc15;
+  color: #fde047;
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem 0.25rem 0.65rem;
+  border-radius: 999px;
+}
+
+.map-selection-chip button {
+  border: none;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  line-height: 1;
+  padding: 0 0.15rem;
+}
+
+.map-zoom-box {
+  position: absolute;
+  display: none;
+  border: 2px dashed var(--accent);
+  background: rgba(61, 139, 253, 0.12);
+  pointer-events: none;
+  z-index: 15;
+}
+
+.map-feature-popup {
+  position: absolute;
+  z-index: 25;
+  min-width: 160px;
+  max-width: 220px;
+  background: rgba(19, 35, 55, 0.96);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0.65rem 0.75rem;
+  font-size: 0.78rem;
+  pointer-events: none;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+}
+
+.map-feature-popup strong {
+  display: block;
+  color: var(--ice);
+  margin-bottom: 0.4rem;
+  font-size: 0.85rem;
+}
+
+.map-feature-popup dl {
+  margin: 0;
+}
+
+.map-feature-popup dl div {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 0.15rem 0.5rem;
+  margin-bottom: 0.2rem;
+}
+
+.map-feature-popup dt {
+  color: var(--muted);
+  margin: 0;
+}
+
+.map-feature-popup dd {
+  margin: 0;
+  color: var(--text);
+  word-break: break-word;
 }
 
 /* Analysis layout */

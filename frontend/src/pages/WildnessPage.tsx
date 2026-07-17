@@ -83,6 +83,7 @@ export function WildnessPage() {
         { id: 'wildness', label: 'Wildness Index', color: '#34d399', visible: visible.wildness, onToggle: () => setVisible((v) => ({ ...v, wildness: !v.wildness })) },
         { id: 'viewshed', label: 'Cumulative Viewshed', color: '#ef4444', visible: visible.viewshed, onToggle: () => setVisible((v) => ({ ...v, viewshed: !v.viewshed })) },
       ]}
+      viewResetKey={result ? JSON.stringify(result.extent) : undefined}
       charts={
         <>
           <div className="stat-cards">
