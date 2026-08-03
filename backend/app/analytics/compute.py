@@ -37,6 +37,10 @@ N_CONT = int(CONT_MASK.sum())
 CELL_KM2 = (RES_M / 1000) ** 2
 GRID_CONT = np.column_stack([_GXf[CONT_IDX], _GYf[CONT_IDX]])
 
+# Upsample analysis PNGs with nearest-neighbour so zoomed views stay crisp
+# (data are still 50 km cells — this only avoids blurry bilinear stretching).
+PNG_DISPLAY_SCALE = 8
+
 # Image bounds for MapLibre raster overlay (EPSG:4326 corners, south of 60°S)
 RASTER_COORDS = [[-180, -55], [180, -55], [180, -85.05], [-180, -85.05]]
 
@@ -112,8 +116,14 @@ def _make_png(
         alpha[valid] = (t[valid] * max_alpha).astype(np.uint8)
 
     rgba[:, :, 3] = alpha
+    img = Image.fromarray(rgba, "RGBA")
+    if PNG_DISPLAY_SCALE > 1:
+        img = img.resize(
+            (NX * PNG_DISPLAY_SCALE, NY * PNG_DISPLAY_SCALE),
+            resample=Image.Resampling.NEAREST,
+        )
     buf = io.BytesIO()
-    Image.fromarray(rgba, "RGBA").save(buf, format="PNG")
+    img.save(buf, format="PNG", optimize=True)
     return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
