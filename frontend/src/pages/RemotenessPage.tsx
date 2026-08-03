@@ -1,136 +1,162 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { FeatureCollection } from 'geojson';
-import { AnalysisLayout } from '../components/layout/AnalysisLayout';
-import { HistogramChart, RankBarChart } from '../components/charts/ResultCharts';
-import { analyzeRemoteness, uploadFile } from '../api/client';
+import { analyzeRemoteness, fetchPrecomputed, uploadFile } from '../api/client';
+import type { RemotenessResult, UploadResult, PrecomputedResponse } from '../api/client';
+import { MapView } from '../components/map/MapView';
+import type { RasterLayer } from '../components/map/MapView';
+import {
+  AnalysisLayout, SectionHeader, ParamSlider, StatCard,
+  UploadPanel, LayerLegend, HistogramChart, RankChart,
+  LoadingOverlay, ErrorBanner,
+} from '../components/shared';
+
+const RASTER_TOOLTIP = 'The remoteness score (0–100) measures how far each 50 km grid cell is from human infrastructure and visitor sites. Higher scores = more remote. The rank layer classifies cells into four categories (< 5 km, 5–20 km, 20–50 km, > 50 km from nearest human activity) following IP 39 Table 4 thresholds.';
+const RANK_TOOLTIP   = 'Ranks follow Summerson & Bishop (2012) and ATCM XXXVI IP 39 (New Zealand, 2013) Table 4 thresholds: < 5 km = Low remoteness (heavily impacted), 5–20 km = Moderate, 20–50 km = High-Moderate, > 50 km = High remoteness.';
+const HIST_TOOLTIP   = 'Distribution of remoteness scores across all 9,841 Antarctic grid cells (50 km resolution, EPSG:3031). A score of 100 indicates the cell is maximally remote from all known human activity.';
+
+const DEFAULT_COORDS: [[number,number],[number,number],[number,number],[number,number]] =
+  [[-180,-60],[180,-60],[180,-90],[-180,-90]];
 
 export function RemotenessPage() {
-  const [yearMin, setYearMin] = useState<number | ''>('');
-  const [yearMax, setYearMax] = useState<number | ''>('');
-  const [opacity, setOpacity] = useState(0.7);
-  const [layers, setLayers] = useState({ buildings: true, corridors: true, visitor_sites: true, planned: false });
-  const [uploadId, setUploadId] = useState<string | null>(null);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState<Record<string, boolean>>({
-    score: true,
-    rank: true,
-    buildings: true,
-    corridors: true,
-    visitor_sites: true,
-    uploaded: true,
-  });
+  const [result,       setResult]       = useState<RemotenessResult | null>(null);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState<string | null>(null);
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [uploadId,     setUploadId]     = useState<string | null>(null);
+  const [mergeUpload,  setMergeUpload]  = useState(true);
+  const [opacity,      setOpacity]      = useState(0.8);
+  const [showScore,    setShowScore]    = useState(true);
+  const [showRank,     setShowRank]     = useState(false);
+
+  // Analysis params
+  const [facDecay,  setFacDecay]  = useState(100);
+  const [visDecay,  setVisDecay]  = useState(50);
+  const [visWeight, setVisWeight] = useState(0.5);
+
+  // Load precomputed raster on mount
+  useEffect(() => {
+    setLoading(true);
+    fetchPrecomputed()
+      .then((pre: PrecomputedResponse) => {
+        if (pre.rasters.remoteness_score) {
+          const coords = (pre.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+          setResult(prev => ({
+            ...prev,
+            score_png:            pre.rasters.remoteness_score,
+            rank_png:             pre.rasters.remoteness_rank || '',
+            raster_coords:        pre.raster_coords,
+            rank_pcts:            pre.stats.remoteness?.rank_pcts || {},
+            mean_score:           pre.stats.remoteness?.mean_score || 0,
+            high_remoteness_pct:  pre.stats.remoteness?.high_remoteness_pct || 0,
+            high_remoteness_km2:  pre.stats.remoteness?.high_remoteness_km2 || 0,
+            total_continent_km2:  pre.stats.remoteness?.total_continent_km2 || 0,
+            histogram:            { counts: [], edges: [] },
+            n_facilities:         81,
+            n_visitor_sites:      331,
+            params:               {},
+          } as RemotenessResult));
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const run = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
       const data = await analyzeRemoteness({
-        year_min: yearMin || null,
-        year_max: yearMax || null,
-        opacity,
-        layers: {
-          buildings: layers.buildings,
-          corridors: layers.corridors,
-          visitor_sites: layers.visitor_sites,
-          planned: layers.planned,
-        },
-        upload_id: uploadId,
+        facility_decay_km: facDecay,
+        visitor_decay_km:  visDecay,
+        visitor_weight:    visWeight,
+        upload_id:         uploadId,
+        merge_uploaded:    mergeUpload,
       });
       setResult(data);
+    } catch (e: unknown) {
+      setError(String(e));
     } finally {
       setLoading(false);
     }
-  }, [yearMin, yearMax, opacity, layers, uploadId]);
+  }, [facDecay, visDecay, visWeight, uploadId, mergeUpload]);
 
-  useEffect(() => {
-    run();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const res = await uploadFile(file);
-    setUploadId(res.upload_id);
+  const handleUpload = async (file: File) => {
+    try {
+      const res = await uploadFile(file);
+      setUploadResult(res);
+      setUploadId(res.upload_id);
+    } catch (e: unknown) { setError(String(e)); }
   };
 
-  const inputLayers = (result?.input_layers || {}) as Record<string, FeatureCollection>;
-  const scoreRaster = result?.combined_remoteness_score as { png_base64?: string } | undefined;
-  const rankRaster = result?.remoteness_rank as { png_base64?: string } | undefined;
-
-  const mapLayers = [
-    ...(scoreRaster?.png_base64
-      ? [{ id: 'score', visible: visible.score, opacity, rasterUrl: `data:image/png;base64,${scoreRaster.png_base64}` }]
-      : []),
-    ...(rankRaster?.png_base64
-      ? [{ id: 'rank', visible: visible.rank, opacity, rasterUrl: `data:image/png;base64,${rankRaster.png_base64}` }]
-      : []),
-    ...Object.entries(inputLayers).map(([key, data]) => ({
-      id: key,
-      data,
-      visible: visible[key] ?? true,
-      opacity,
-      color: key === 'linear_corridors' ? '#ef4444' : key === 'visitor_sites' ? '#a855f7' : '#f59e0b',
-    })),
-  ];
-
-  const legend = [
-    { id: 'score', label: 'Remoteness Score', color: '#4ade80', visible: visible.score, onToggle: () => setVisible((v) => ({ ...v, score: !v.score })) },
-    { id: 'rank', label: 'Remoteness Rank', color: '#fbbf24', visible: visible.rank, onToggle: () => setVisible((v) => ({ ...v, rank: !v.rank })) },
-    ...Object.keys(inputLayers).map((key) => ({
-      id: key,
-      label: key.replace(/_/g, ' '),
-      color: '#f59e0b',
-      visible: visible[key] ?? true,
-      onToggle: () => setVisible((v) => ({ ...v, [key]: !v[key] })),
-    })),
+  const coords = (result?.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+  const rasters: RasterLayer[] = [
+    ...(result?.score_png ? [{ id: 'score', png_base64: result.score_png, coords, opacity, visible: showScore }] : []),
+    ...(result?.rank_png  ? [{ id: 'rank',  png_base64: result.rank_png,  coords, opacity, visible: showRank  }] : []),
   ];
 
   return (
     <AnalysisLayout
-      title="Remoteness Indicators"
       controls={
-        <>
+        <div className="control-body">
+          <SectionHeader title="Remoteness Indicators" tooltip={RASTER_TOOLTIP} />
           <p className="indicator-note">
-            Demo: isolation from infrastructure, corridors, and visitor sites (IP 39 Table 1 distances).
+            Isolation from human infrastructure and visitor activity.
+            Methods follow IP 39 Table 1 & 4 (New Zealand, 2013) and Summerson &amp; Bishop (2012).
           </p>
-          <label className="control-label">
-            <input type="checkbox" checked={layers.buildings} onChange={(e) => setLayers((l) => ({ ...l, buildings: e.target.checked }))} />
-            Building footprints
-          </label>
-          <label className="control-label">
-            <input type="checkbox" checked={layers.corridors} onChange={(e) => setLayers((l) => ({ ...l, corridors: e.target.checked }))} />
-            Linear corridors
-          </label>
-          <label className="control-label">
-            <input type="checkbox" checked={layers.visitor_sites} onChange={(e) => setLayers((l) => ({ ...l, visitor_sites: e.target.checked }))} />
-            Visitor sites
-          </label>
-          <label className="control-label">
-            <input type="checkbox" checked={layers.planned} onChange={(e) => setLayers((l) => ({ ...l, planned: e.target.checked }))} />
-            Planned infrastructure
-          </label>
-          <label className="control-label">Upload geospatial file</label>
-          <input type="file" accept=".geojson,.json,.zip,.gpkg" onChange={handleUpload} />
-          {uploadId && <small className="upload-ok">Uploaded: {uploadId.slice(0, 8)}…</small>}
-          <label className="control-label">Year min</label>
-          <input type="number" value={yearMin} onChange={(e) => setYearMin(e.target.value ? +e.target.value : '')} placeholder="e.g. 2020" />
-          <label className="control-label">Year max</label>
-          <input type="number" value={yearMax} onChange={(e) => setYearMax(e.target.value ? +e.target.value : '')} placeholder="e.g. 2024" />
-          <label className="control-label">Layer opacity: {opacity.toFixed(2)}</label>
-          <input type="range" min={0} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(+e.target.value)} />
-          <p className="threshold-note">Rank thresholds: 5 · 20 · 50 km (IP 39 Table 4)</p>
+
+          <div className="param-section">
+            <h4>Analysis Parameters</h4>
+            <ParamSlider label="Facility decay radius" value={facDecay} min={20} max={500} step={10} unit=" km"
+              tooltip="Exponential decay radius from permanent facilities (stations). At this distance, facility impact drops to ~37% of maximum. COMNAP facilities v3.5.0 (2024)."
+              onChange={setFacDecay} />
+            <ParamSlider label="Visitor site decay radius" value={visDecay} min={10} max={300} step={5} unit=" km"
+              tooltip="Exponential decay radius from ATS visitor sites. Visitor sites have transient impact; lower values than facilities."
+              onChange={setVisDecay} />
+            <ParamSlider label="Visitor site weight" value={visWeight} min={0.1} max={1} step={0.1} unit=""
+              tooltip="Relative weighting of visitor site impact vs. facility impact. 0.5 = visitor sites count half as much as facilities."
+              onChange={setVisWeight} />
+          </div>
+
+          <UploadPanel uploadResult={uploadResult} onUpload={handleUpload}
+            merge={mergeUpload} onMergeChange={setMergeUpload} />
+
+          <div className="param-section">
+            <ParamSlider label="Layer opacity" value={opacity} min={0.1} max={1} step={0.05} unit=""
+              onChange={setOpacity} />
+          </div>
+
           <button className="run-btn" onClick={run} disabled={loading}>
             {loading ? 'Running…' : 'Run Analysis'}
           </button>
-        </>
+        </div>
       }
-      layers={mapLayers}
-      legend={legend}
-      viewResetKey={result ? JSON.stringify(result.extent) : undefined}
+      map={
+        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+          <MapView rasters={rasters} />
+          {loading && <LoadingOverlay />}
+          {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
+        </div>
+      }
+      legend={
+        <LayerLegend items={[
+          { id: 'score', label: 'Remoteness Score', color: '#43a047', visible: showScore, onToggle: () => setShowScore(v => !v) },
+          { id: 'rank',  label: 'Remoteness Rank',  color: '#fbc02d', visible: showRank,  onToggle: () => setShowRank(v => !v)  },
+        ]} />
+      }
       charts={
         <>
-          <RankBarChart stats={(result?.rank_stats as Record<string, number>) || {}} />
-          <HistogramChart histogram={result?.histogram as { counts: number[]; edges: number[] }} title="Remoteness Score Distribution" />
+          <div className="stat-cards">
+            <StatCard value={result ? `${result.high_remoteness_pct}%` : '—'}
+              label="High remoteness" sub="> 50 km from any human activity" />
+            <StatCard value={result ? `${(result.high_remoteness_km2 / 1e6).toFixed(1)} M km²` : '—'}
+              label="High remoteness area" />
+            <StatCard value={result ? `${result.mean_score.toFixed(0)}` : '—'}
+              label="Mean remoteness score" sub="0–100" />
+            <StatCard value={result ? `${result.n_facilities}` : '81'}
+              label="Facilities" sub="COMNAP v3.5.0 (2024)" />
+          </div>
+          {result?.rank_pcts && <RankChart pcts={result.rank_pcts} />}
+          {result?.histogram?.counts.length ? (
+            <HistogramChart histogram={result.histogram} title="Remoteness Score Distribution" color="#43a047" />
+          ) : null}
         </>
       }
     />

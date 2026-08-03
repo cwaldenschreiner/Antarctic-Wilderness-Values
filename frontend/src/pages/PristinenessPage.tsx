@@ -1,105 +1,173 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AnalysisLayout } from '../components/layout/AnalysisLayout';
-import { HistogramChart } from '../components/charts/ResultCharts';
-import { analyzePristineness, uploadFile } from '../api/client';
+import { analyzePristineness, fetchPrecomputed, uploadFile } from '../api/client';
+import type { PristinenessResult, UploadResult, PrecomputedResponse } from '../api/client';
+import { MapView } from '../components/map/MapView';
+import type { RasterLayer } from '../components/map/MapView';
+import {
+  AnalysisLayout, SectionHeader, ParamSlider, StatCard,
+  UploadPanel, LayerLegend, HistogramChart,
+  LoadingOverlay, ErrorBanner,
+} from '../components/shared';
+
+const PRIST_TOOLTIP = 'Pristineness measures the degree to which an area remains unmodified by human activity. The score (0–100) combines the Leihy et al. (2020) inviolate wilderness baseline (50 km grid cells with no recorded human visitation 1819–2018) with a visit-intensity penalty derived from ATS visitor site records. Inviolate cells score 50–100; non-inviolate cells score 0–60.';
+const BASE_DECAY_TOOLTIP = 'Baseline exponential decay distance (km) from visitor sites with low visit counts. At this distance from a low-traffic site, visit impact drops to ~37%.';
+const MAX_DECAY_TOOLTIP = 'Additional decay added for high-traffic sites (log-scaled by 5-year visit total). High-traffic Peninsula sites (e.g. Neko Harbour: 76,214 visits) receive a much wider impact radius than remote, rarely-visited sites.';
+const INVIOLATE_TOOLTIP = 'The inviolate wilderness layer is taken directly from Leihy, R.I. et al. (2020) "Antarctica\'s wilderness fails to capture continent\'s biodiversity", Nature 583:567–571. It identifies 1,733 grid cells (4.3 million km²) with no recorded human visitation across ~2.7 million activity records spanning 1819–2018.';
+
+const DEFAULT_COORDS = [[-180,-60],[180,-60],[180,-90],[-180,-90]] as [[number,number],[number,number],[number,number],[number,number]];
 
 export function PristinenessPage() {
-  const [yearMin, setYearMin] = useState<number | ''>('');
-  const [yearMax, setYearMax] = useState<number | ''>('');
-  const [threshold, setThreshold] = useState(5000);
-  const [opacity, setOpacity] = useState(0.7);
-  const [uploadId, setUploadId] = useState<string | null>(null);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState({ pristineness: true, inviolate: true });
+  const [result,        setResult]       = useState<PristinenessResult | null>(null);
+  const [loading,       setLoading]      = useState(false);
+  const [error,         setError]        = useState<string | null>(null);
+  const [uploadResult,  setUploadResult] = useState<UploadResult | null>(null);
+  const [uploadId,      setUploadId]     = useState<string | null>(null);
+  const [mergeUpload,   setMergeUpload]  = useState(true);
+  const [opacity,       setOpacity]      = useState(0.8);
+  const [showPrist,     setShowPrist]    = useState(true);
+  const [showInviolate, setShowInv]      = useState(false);
+
+  const [baseDecay, setBaseDecay] = useState(50);
+  const [maxDecay,  setMaxDecay]  = useState(250);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchPrecomputed()
+      .then((pre: PrecomputedResponse) => {
+        if (pre.rasters.pristineness_index) {
+          setResult({
+            pristineness_png:    pre.rasters.pristineness_index,
+            inviolate_png:       pre.rasters.inviolate_mask || '',
+            raster_coords:       pre.raster_coords,
+            inviolate_pct:       pre.stats.pristineness?.inviolate_pct || 0,
+            inviolate_area_km2:  pre.stats.pristineness?.inviolate_area_km2 || 0,
+            total_continent_km2: 24_600_000,
+            n_patches:           pre.stats.pristineness?.n_patches || 0,
+            largest_patch_km2:   pre.stats.pristineness?.largest_patch_km2 || 0,
+            mean_patch_km2:      0,
+            mean_score:          0,
+            histogram:           { counts: [], edges: [] },
+            n_visitor_sites:     331,
+            n_inviolate_polygons: 1733,
+            params:              {},
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const run = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
       const data = await analyzePristineness({
-        year_min: yearMin || null,
-        year_max: yearMax || null,
-        impact_threshold_m: threshold,
-        opacity,
-        upload_id: uploadId,
+        visit_decay_base_km: baseDecay,
+        visit_decay_max_km:  maxDecay,
+        upload_id:           uploadId,
+        merge_uploaded:      mergeUpload,
       });
       setResult(data);
+    } catch (e: unknown) {
+      setError(String(e));
     } finally {
       setLoading(false);
     }
-  }, [yearMin, yearMax, threshold, opacity, uploadId]);
+  }, [baseDecay, maxDecay, uploadId, mergeUpload]);
 
-  useEffect(() => {
-    run();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const res = await uploadFile(file);
-    setUploadId(res.upload_id);
+  const handleUpload = async (file: File) => {
+    try {
+      const res = await uploadFile(file);
+      setUploadResult(res);
+      setUploadId(res.upload_id);
+    } catch (e: unknown) { setError(String(e)); }
   };
 
-  const frag = result?.fragmentation as Record<string, number> | undefined;
-  const pristRaster = result?.pristineness_index as { png_base64?: string } | undefined;
-  const invRaster = result?.inviolate_mask as { png_base64?: string } | undefined;
-
-  const mapLayers = [
-    ...(pristRaster?.png_base64
-      ? [{ id: 'pristineness', visible: visible.pristineness, opacity, rasterUrl: `data:image/png;base64,${pristRaster.png_base64}` }]
-      : []),
-    ...(invRaster?.png_base64
-      ? [{ id: 'inviolate', visible: visible.inviolate, opacity: opacity * 0.8, rasterUrl: `data:image/png;base64,${invRaster.png_base64}` }]
-      : []),
+  const coords = (result?.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+  const inviolateOpacity = opacity * 0.8;
+  const rasters: RasterLayer[] = [
+    ...(result?.pristineness_png ? [{ id: 'prist',     png_base64: result.pristineness_png, coords, opacity,                  visible: showPrist    }] : []),
+    ...(result?.inviolate_png    ? [{ id: 'inviolate', png_base64: result.inviolate_png,    coords, opacity: inviolateOpacity, visible: showInviolate }] : []),
   ];
 
   return (
     <AnalysisLayout
-      title="Pristineness Indicators"
       controls={
-        <>
+        <div className="control-body">
+          <SectionHeader title="Pristineness Indicators" tooltip={PRIST_TOOLTIP} />
           <p className="indicator-note">
-            Demo: inviolate areas and fragmentation (Hughes et al. 2011; Leihy et al. 2020).
+            Inviolate areas and human activity footprint. Baseline from Leihy et al. (2020)
+            inviolate wilderness (no recorded human visitation 1819–2018), modulated by
+            ATS visitor site intensity.
           </p>
-          <label className="control-label">Upload visitation / footprint layer</label>
-          <input type="file" accept=".geojson,.json,.zip,.gpkg" onChange={handleUpload} />
-          <label className="control-label">Impact threshold (m): {threshold}</label>
-          <input type="range" min={1000} max={20000} step={500} value={threshold} onChange={(e) => setThreshold(+e.target.value)} />
-          <label className="control-label">Year min</label>
-          <input type="number" value={yearMin} onChange={(e) => setYearMin(e.target.value ? +e.target.value : '')} />
-          <label className="control-label">Year max</label>
-          <input type="number" value={yearMax} onChange={(e) => setYearMax(e.target.value ? +e.target.value : '')} />
-          <label className="control-label">Opacity: {opacity.toFixed(2)}</label>
-          <input type="range" min={0} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(+e.target.value)} />
-          <p className="threshold-note">{result?.pollutant_note as string}</p>
+
+          <div className="param-section">
+            <h4>Analysis Parameters</h4>
+            <ParamSlider label="Visit decay (base)" value={baseDecay} min={10} max={200} step={10} unit=" km"
+              tooltip={BASE_DECAY_TOOLTIP} onChange={setBaseDecay} />
+            <ParamSlider label="Visit decay (max, high-traffic)" value={maxDecay} min={50} max={1000} step={25} unit=" km"
+              tooltip={MAX_DECAY_TOOLTIP} onChange={setMaxDecay} />
+          </div>
+
+          <UploadPanel uploadResult={uploadResult} onUpload={handleUpload}
+            merge={mergeUpload} onMergeChange={setMergeUpload} />
+
+          <div className="param-section">
+            <ParamSlider label="Layer opacity" value={opacity} min={0.1} max={1} step={0.05} unit=""
+              onChange={setOpacity} />
+          </div>
+
           <button className="run-btn" onClick={run} disabled={loading}>
             {loading ? 'Running…' : 'Run Analysis'}
           </button>
-        </>
+
+          <div className="method-note">
+            <strong>Inviolate baseline:</strong>{' '}
+            <span className="info-text">Leihy et al. (2020) 50 km grid — areas with no recorded human visitation 1819–2018.</span>
+          </div>
+        </div>
       }
-      layers={mapLayers}
-      legend={[
-        { id: 'pristineness', label: 'Pristineness Index', color: '#60a5fa', visible: visible.pristineness, onToggle: () => setVisible((v) => ({ ...v, pristineness: !v.pristineness })) },
-        { id: 'inviolate', label: 'Inviolate Mask', color: '#e2e8f0', visible: visible.inviolate, onToggle: () => setVisible((v) => ({ ...v, inviolate: !v.inviolate })) },
-      ]}
-      viewResetKey={result ? JSON.stringify(result.extent) : undefined}
+      map={
+        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+          <MapView rasters={rasters} />
+          {loading && <LoadingOverlay />}
+          {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
+        </div>
+      }
+      legend={
+        <LayerLegend items={[
+          { id: 'prist',    label: 'Pristineness Index', color: '#00897b', visible: showPrist,    onToggle: () => setShowPrist(v => !v) },
+          { id: 'inviolate', label: 'Inviolate Areas',   color: '#1b5e20', visible: showInviolate, onToggle: () => setShowInv(v => !v)   },
+        ]} />
+      }
       charts={
         <>
           <div className="stat-cards">
-            <div className="stat-card">
-              <span className="stat-value">{frag ? `${frag.inviolate_pct?.toFixed(1)}%` : '—'}</span>
-              <span className="stat-label">Inviolate area</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">{frag?.patch_count ?? '—'}</span>
-              <span className="stat-label">Patches</span>
-            </div>
-            <div className="stat-card">
-              <span className="stat-value">{frag ? frag.largest_patch_km2?.toFixed(0) : '—'}</span>
-              <span className="stat-label">Largest patch (km²)</span>
-            </div>
+            <StatCard
+              value={result ? `${result.inviolate_pct}%` : '—'}
+              label="Inviolate area"
+              sub="No recorded visitation 1819–2018"
+            />
+            <StatCard
+              value={result ? `${(result.inviolate_area_km2 / 1e6).toFixed(1)} M km²` : '—'}
+              label="Inviolate extent"
+            />
+            <StatCard
+              value={result ? `${result.n_patches}` : '—'}
+              label="Inviolate patches"
+              sub="Contiguous blocks"
+            />
+            <StatCard
+              value={result ? `${(result.largest_patch_km2 / 1e3).toFixed(0)}k km²` : '—'}
+              label="Largest patch"
+            />
           </div>
-          <HistogramChart histogram={result?.histogram as { counts: number[]; edges: number[] }} title="Pristineness Index Distribution" />
+          {result?.histogram?.counts.length ? (
+            <HistogramChart histogram={result.histogram} title="Pristineness Score Distribution" color="#00897b" />
+          ) : null}
+          <div className="citation-block">
+            <p>Inviolate baseline: Leihy, R.I. et al. (2020). Antarctica's wilderness fails to capture continent's biodiversity. <em>Nature</em>, 583, 567–571.</p>
+            <p>Visitor data: ATS Land-based Visited Sites (2019–2024). Compiled by Walden-Schreiner (2025) for ANT-MICI WP3.</p>
+          </div>
         </>
       }
     />

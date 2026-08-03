@@ -1,84 +1,61 @@
-"""FastAPI routes."""
-
+"""FastAPI routes for ANT-MICI Dashboard."""
 from __future__ import annotations
 
-import base64
 import gc
+import io
+import json
 import uuid
 from pathlib import Path
-from typing import Any
+from typing import Annotated
 
 import geopandas as gpd
 from fastapi import APIRouter, File, HTTPException, UploadFile
-from fastapi.responses import JSONResponse
+from pydantic import BaseModel, Field
 
-from app.analytics.pristineness import compute_pristineness, default_pristineness_layers
-from app.analytics.raster_utils import gdf_to_geojson_dict, load_bundled_geojson, parse_upload, raster_to_png_bytes
-from app.analytics.remoteness import combined_remoteness_score, default_remoteness_layers
-from app.analytics.wildness import compute_viewshed, default_wildness_layers
-from app.models.schemas import PristinenessRequest, RemotenessRequest, WildnessRequest
+from app.analytics.compute import (
+    DATA_DIR,
+    compute_pristineness,
+    compute_remoteness,
+    compute_wildness,
+    load_precomputed_stats,
+    _load_precomputed_png,
+    RASTER_COORDS,
+)
 
 router = APIRouter()
-
 UPLOAD_DIR = Path(__file__).resolve().parents[2] / "data" / "uploads"
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 _uploads: dict[str, gpd.GeoDataFrame] = {}
 
 
-def _encode_raster(arr, cmap: str = "viridis", vmin=None, vmax=None) -> str:
-    png = raster_to_png_bytes(arr, cmap=cmap, vmin=vmin, vmax=vmax)
-    return base64.b64encode(png).decode("ascii")
+# ── Pydantic models ────────────────────────────────────────────────────────────
+
+class RemotenessParams(BaseModel):
+    facility_decay_km: float = Field(100.0, ge=10, le=500)
+    visitor_decay_km:  float = Field(50.0,  ge=5,  le=500)
+    visitor_weight:    float = Field(0.5,   ge=0,  le=1)
+    opacity:           float = Field(0.8,   ge=0,  le=1)
+    upload_id:         str | None = None
+    merge_uploaded:    bool = True
 
 
-def _result_with_raster(result: dict[str, Any], key: str, cmap: str = "viridis") -> dict[str, Any]:
-    out = {k: v for k, v in result.items() if not isinstance(v, type(result.get(key))) or k != key}
-    arr = result[key]
-    out[key] = {
-        "png_base64": _encode_raster(arr, cmap=cmap),
-        "meta": result.get("meta"),
-    }
-    return out
+class WildnessParams(BaseModel):
+    facility_sight_km: float = Field(100.0, ge=10, le=500)
+    visitor_sight_km:  float = Field(50.0,  ge=5,  le=500)
+    opacity:           float = Field(0.8,   ge=0,  le=1)
+    upload_id:         str | None = None
+    merge_uploaded:    bool = True
 
 
-@router.get("/health")
-def health():
-    return {"status": "ok"}
+class PristinenessParams(BaseModel):
+    visit_decay_base_km: float = Field(50.0,  ge=10, le=200)
+    visit_decay_max_km:  float = Field(250.0, ge=50, le=1000)
+    opacity:             float = Field(0.8,   ge=0,  le=1)
+    upload_id:           str | None = None
+    merge_uploaded:      bool = True
 
 
-@router.get("/layers/catalog")
-def layer_catalog():
-    data_dir = Path(__file__).resolve().parents[2] / "data" / "bundled"
-    catalog_path = data_dir / "catalog.json"
-    if catalog_path.exists():
-        import json
-
-        return json.loads(catalog_path.read_text())
-    return {"layers": []}
-
-
-@router.get("/layers/{name}")
-def get_layer(name: str):
-    gdf = load_bundled_geojson(name)
-    return gdf_to_geojson_dict(gdf)
-
-
-@router.post("/upload")
-async def upload_file(file: UploadFile = File(...)):
-    content = await file.read()
-    try:
-        gdf = parse_upload(content, file.filename or "upload.geojson")
-    except Exception as e:
-        raise HTTPException(400, f"Failed to parse upload: {e}") from e
-    upload_id = str(uuid.uuid4())
-    _uploads[upload_id] = gdf
-    path = UPLOAD_DIR / f"{upload_id}.geojson"
-    gdf.to_file(path, driver="GeoJSON")
-    return {
-        "upload_id": upload_id,
-        "feature_count": len(gdf),
-        "geojson": gdf_to_geojson_dict(gdf),
-    }
-
+# ── Helpers ────────────────────────────────────────────────────────────────────
 
 def _get_upload(upload_id: str | None) -> gpd.GeoDataFrame | None:
     if not upload_id:
@@ -86,90 +63,118 @@ def _get_upload(upload_id: str | None) -> gpd.GeoDataFrame | None:
     if upload_id in _uploads:
         return _uploads[upload_id]
     path = UPLOAD_DIR / f"{upload_id}.geojson"
+    return gpd.read_file(str(path)) if path.exists() else None
+
+
+# ── Routes ─────────────────────────────────────────────────────────────────────
+
+@router.get("/health")
+def health():
+    return {"status": "ok", "version": "2.0.0"}
+
+
+@router.get("/layers/catalog")
+def catalog():
+    path = DATA_DIR / "catalog.json"
     if path.exists():
-        return gpd.read_file(path)
-    return None
+        return json.loads(path.read_text())
+    return {"layers": []}
+
+
+@router.get("/layers/{name}")
+def get_layer(name: str):
+    path = DATA_DIR / f"{name}.geojson"
+    if not path.exists():
+        raise HTTPException(404, f"Layer not found: {name}")
+    gdf = gpd.read_file(str(path))
+    if gdf.crs is None:
+        gdf = gdf.set_crs("EPSG:4326")
+    return json.loads(gdf.to_crs("EPSG:4326").to_json())
+
+
+@router.get("/precomputed")
+def precomputed():
+    """Return precomputed rasters and stats for dashboard cold-load."""
+    stats = load_precomputed_stats()
+    rasters = {}
+    for key in ["remoteness_score", "remoteness_rank",
+                "wildness_index", "cumulative_viewshed",
+                "pristineness_index", "inviolate_mask"]:
+        png = _load_precomputed_png(key)
+        if png:
+            rasters[key] = png
+    return {
+        "rasters": rasters,
+        "stats": stats,
+        "raster_coords": RASTER_COORDS,
+    }
+
+
+@router.post("/upload")
+async def upload(file: UploadFile = File(...)):
+    content = await file.read()
+    fname = file.filename or "upload.geojson"
+    try:
+        gdf = gpd.read_file(io.BytesIO(content))
+    except Exception as e:
+        raise HTTPException(400, f"Failed to parse file: {e}")
+    if gdf.crs is None:
+        gdf = gdf.set_crs("EPSG:4326")
+    uid = str(uuid.uuid4())
+    _uploads[uid] = gdf
+    (UPLOAD_DIR / f"{uid}.geojson").write_text(gdf.to_crs("EPSG:4326").to_json())
+    return {
+        "upload_id":     uid,
+        "feature_count": len(gdf),
+        "geometry_types": gdf.geometry.geom_type.value_counts().to_dict(),
+        "crs":           str(gdf.crs),
+    }
 
 
 @router.post("/analyze/remoteness")
-def analyze_remoteness(req: RemotenessRequest):
+def analyze_remoteness(req: RemotenessParams):
     uploaded = _get_upload(req.upload_id)
-    layers = default_remoteness_layers(
-        include_buildings=req.layers.buildings,
-        include_corridors=req.layers.corridors,
-        include_visitor_sites=req.layers.visitor_sites,
-        include_planned=req.layers.planned,
-        uploaded=uploaded,
-    )
-    result = combined_remoteness_score(layers=layers, year_min=req.year_min, year_max=req.year_max)
-    response = {
-        "rank_stats": result["rank_stats"],
-        "histogram": result["histogram"],
-        "extent": result["extent"],
-        "grid_res_m": result.get("grid_res_m"),
-        "combined_remoteness_score": {
-            "png_base64": _encode_raster(result["combined_remoteness_score"], cmap="YlGn"),
-            "meta": result["meta"],
-        },
-        "remoteness_rank": {
-            "png_base64": _encode_raster(result["remoteness_rank"], cmap="RdYlGn", vmin=0, vmax=3),
-            "meta": result["meta"],
-        },
-        "input_layers": {k: gdf_to_geojson_dict(v) for k, v in layers.items() if not v.empty},
-    }
+    try:
+        result = compute_remoteness(
+            facility_decay_km=req.facility_decay_km,
+            visitor_decay_km=req.visitor_decay_km,
+            visitor_weight=req.visitor_weight,
+            uploaded_gdf=uploaded,
+            merge_uploaded=req.merge_uploaded,
+        )
+    except Exception as e:
+        raise HTTPException(500, str(e))
     gc.collect()
-    return response
+    return result
 
 
 @router.post("/analyze/wildness")
-def analyze_wildness(req: WildnessRequest):
+def analyze_wildness(req: WildnessParams):
     uploaded = _get_upload(req.upload_id)
-    infra, visitors = default_wildness_layers(include_visitors=req.include_visitors, uploaded=uploaded)
-    result = compute_viewshed(infra, visitor_sites=visitors, year_min=req.year_min, year_max=req.year_max)
-    payload = {
-        "visible_impact_pct": result["visible_impact_pct"],
-        "histogram": result["histogram"],
-        "extent": result["extent"],
-        "dem_used": result["dem_used"],
-        "grid_res_m": result.get("grid_res_m"),
-        "wildness_index": {
-            "png_base64": _encode_raster(result["wildness_index"], cmap="Greens"),
-            "meta": result["meta"],
-        },
-        "cumulative_viewshed_union": {
-            "png_base64": _encode_raster(result["cumulative_viewshed_union"], cmap="Reds"),
-            "meta": result["meta"],
-        },
-    }
+    try:
+        result = compute_wildness(
+            facility_sight_km=req.facility_sight_km,
+            visitor_sight_km=req.visitor_sight_km,
+            uploaded_gdf=uploaded,
+            merge_uploaded=req.merge_uploaded,
+        )
+    except Exception as e:
+        raise HTTPException(500, str(e))
     gc.collect()
-    return payload
+    return result
 
 
 @router.post("/analyze/pristineness")
-def analyze_pristineness(req: PristinenessRequest):
+def analyze_pristineness(req: PristinenessParams):
     uploaded = _get_upload(req.upload_id)
-    footprints, visitation = default_pristineness_layers(uploaded=uploaded)
-    result = compute_pristineness(
-        human_activity=footprints,
-        visitation=visitation,
-        year_min=req.year_min,
-        year_max=req.year_max,
-        impact_threshold_m=req.impact_threshold_m,
-    )
-    payload = {
-        "fragmentation": result["fragmentation"],
-        "histogram": result["histogram"],
-        "extent": result["extent"],
-        "grid_res_m": result.get("grid_res_m"),
-        "pollutant_note": result["pollutant_note"],
-        "pristineness_index": {
-            "png_base64": _encode_raster(result["pristineness_index"], cmap="Blues"),
-            "meta": result["meta"],
-        },
-        "inviolate_mask": {
-            "png_base64": _encode_raster(result["inviolate_mask"], cmap="binary"),
-            "meta": result["meta"],
-        },
-    }
+    try:
+        result = compute_pristineness(
+            visit_decay_base_km=req.visit_decay_base_km,
+            visit_decay_max_km=req.visit_decay_max_km,
+            uploaded_gdf=uploaded,
+            merge_uploaded=req.merge_uploaded,
+        )
+    except Exception as e:
+        raise HTTPException(500, str(e))
     gc.collect()
-    return payload
+    return result

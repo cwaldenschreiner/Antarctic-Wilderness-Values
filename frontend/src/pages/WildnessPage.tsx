@@ -1,98 +1,150 @@
 import { useCallback, useEffect, useState } from 'react';
-import { AnalysisLayout } from '../components/layout/AnalysisLayout';
-import { HistogramChart } from '../components/charts/ResultCharts';
-import { analyzeWildness, uploadFile } from '../api/client';
+import { analyzeWildness, fetchPrecomputed, uploadFile } from '../api/client';
+import type { WildnessResult, UploadResult, PrecomputedResponse } from '../api/client';
+import { MapView } from '../components/map/MapView';
+import type { RasterLayer } from '../components/map/MapView';
+import {
+  AnalysisLayout, SectionHeader, ParamSlider, StatCard,
+  UploadPanel, LayerLegend, HistogramChart,
+  LoadingOverlay, ErrorBanner,
+} from '../components/shared';
+
+const WILDNESS_TOOLTIP = 'Wildness measures the proportion of the continent that lies outside the sight and sound range of any human infrastructure or visitor activity. A binary score: 100 = wild (no human presence perceived), 0 = impacted (within sight/sound range). Based on IP 39 §6 (New Zealand, 2013) and Summerson & Bishop (2012) "out of sight and sound" criterion.';
+const SIGHT_FAC_TOOLTIP = 'Maximum distance (km) at which a permanent facility (station, airstrip, etc.) can be seen or heard. At 50 km resolution, thresholds below 50 km are sub-pixel; 100 km represents the approximate range of large station complexes including helicopter operations and radio communication noise.';
+const SIGHT_VIS_TOOLTIP = 'Maximum distance at which a visitor site has a measurable wildness impact. Visitor sites are transient and have lower impact radius than permanent facilities.';
+
+const DEFAULT_COORDS = [[-180,-60],[180,-60],[180,-90],[-180,-90]] as [[number,number],[number,number],[number,number],[number,number]];
 
 export function WildnessPage() {
-  const [yearMin, setYearMin] = useState<number | ''>('');
-  const [yearMax, setYearMax] = useState<number | ''>('');
-  const [opacity, setOpacity] = useState(0.7);
-  const [includeVisitors, setIncludeVisitors] = useState(true);
-  const [uploadId, setUploadId] = useState<string | null>(null);
-  const [result, setResult] = useState<Record<string, unknown> | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [visible, setVisible] = useState({ wildness: true, viewshed: true });
+  const [result,       setResult]       = useState<WildnessResult | null>(null);
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState<string | null>(null);
+  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
+  const [uploadId,     setUploadId]     = useState<string | null>(null);
+  const [mergeUpload,  setMergeUpload]  = useState(true);
+  const [opacity,      setOpacity]      = useState(0.8);
+  const [showWild,     setShowWild]     = useState(true);
+  const [showViewshed, setShowViewshed] = useState(false);
+
+  const [facSight, setFacSight] = useState(100);
+  const [visSight, setVisSight] = useState(50);
+
+  useEffect(() => {
+    setLoading(true);
+    fetchPrecomputed()
+      .then((pre: PrecomputedResponse) => {
+        if (pre.rasters.wildness_index) {
+          setResult({
+            wildness_png:        pre.rasters.wildness_index,
+            viewshed_png:        pre.rasters.cumulative_viewshed || '',
+            raster_coords:       pre.raster_coords,
+            wild_pct:            pre.stats.wildness?.wild_pct || 0,
+            visible_impact_pct:  pre.stats.wildness?.visible_impact_pct || 0,
+            wild_area_km2:       pre.stats.wildness?.wild_area_km2 || 0,
+            impacted_area_km2:   pre.stats.wildness?.impacted_area_km2 || 0,
+            total_continent_km2: 24_600_000,
+            histogram:           { counts: [], edges: [] },
+            n_facilities:        81,
+            n_visitor_sites:     331,
+            params:              {},
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const run = useCallback(async () => {
-    setLoading(true);
+    setLoading(true); setError(null);
     try {
       const data = await analyzeWildness({
-        year_min: yearMin || null,
-        year_max: yearMax || null,
-        opacity,
-        include_visitors: includeVisitors,
-        upload_id: uploadId,
+        facility_sight_km: facSight,
+        visitor_sight_km:  visSight,
+        upload_id:         uploadId,
+        merge_uploaded:    mergeUpload,
       });
       setResult(data);
+    } catch (e: unknown) {
+      setError(String(e));
     } finally {
       setLoading(false);
     }
-  }, [yearMin, yearMax, opacity, includeVisitors, uploadId]);
+  }, [facSight, visSight, uploadId, mergeUpload]);
 
-  useEffect(() => {
-    run();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
-
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const res = await uploadFile(file);
-    setUploadId(res.upload_id);
+  const handleUpload = async (file: File) => {
+    try {
+      const res = await uploadFile(file);
+      setUploadResult(res);
+      setUploadId(res.upload_id);
+    } catch (e: unknown) { setError(String(e)); }
   };
 
-  const wildnessRaster = result?.wildness_index as { png_base64?: string } | undefined;
-  const viewshedRaster = result?.cumulative_viewshed_union as { png_base64?: string } | undefined;
-
-  const mapLayers = [
-    ...(wildnessRaster?.png_base64
-      ? [{ id: 'wildness', visible: visible.wildness, opacity, rasterUrl: `data:image/png;base64,${wildnessRaster.png_base64}` }]
-      : []),
-    ...(viewshedRaster?.png_base64
-      ? [{ id: 'viewshed', visible: visible.viewshed, opacity: opacity * 0.8, rasterUrl: `data:image/png;base64,${viewshedRaster.png_base64}` }]
-      : []),
+  const coords = (result?.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+  const viewshedOpacity = opacity * 0.7;
+  const rasters: RasterLayer[] = [
+    ...(result?.wildness_png  ? [{ id: 'wild',     png_base64: result.wildness_png, coords, opacity,          visible: showWild     }] : []),
+    ...(result?.viewshed_png  ? [{ id: 'viewshed', png_base64: result.viewshed_png, coords, opacity: viewshedOpacity, visible: showViewshed }] : []),
   ];
 
   return (
     <AnalysisLayout
-      title="Wildness Indicators"
       controls={
-        <>
+        <div className="control-body">
+          <SectionHeader title="Wildness Indicators" tooltip={WILDNESS_TOOLTIP} />
           <p className="indicator-note">
-            Demo: cumulative viewshed — areas not visible from infrastructure or visitor sites (IP 39 §6).
+            Areas out of sight and sound of human infrastructure and visitor activity.
+            Binary classification per IP 39 §6 (New Zealand, 2013).
           </p>
-          <label className="control-label">
-            <input type="checkbox" checked={includeVisitors} onChange={(e) => setIncludeVisitors(e.target.checked)} />
-            Include visitor sites (past 3 years)
-          </label>
-          <label className="control-label">Upload infrastructure layer</label>
-          <input type="file" accept=".geojson,.json,.zip,.gpkg" onChange={handleUpload} />
-          <label className="control-label">Year min</label>
-          <input type="number" value={yearMin} onChange={(e) => setYearMin(e.target.value ? +e.target.value : '')} />
-          <label className="control-label">Year max</label>
-          <input type="number" value={yearMax} onChange={(e) => setYearMax(e.target.value ? +e.target.value : '')} />
-          <label className="control-label">Opacity: {opacity.toFixed(2)}</label>
-          <input type="range" min={0} max={1} step={0.05} value={opacity} onChange={(e) => setOpacity(+e.target.value)} />
-          <p className="threshold-note">DEM: {(result?.dem_used as string) || 'synthetic until REMA loaded'}</p>
+
+          <div className="param-section">
+            <h4>Analysis Parameters</h4>
+            <ParamSlider label="Facility sight/sound range" value={facSight} min={50} max={500} step={25} unit=" km"
+              tooltip={SIGHT_FAC_TOOLTIP} onChange={setFacSight} />
+            <ParamSlider label="Visitor site sight/sound range" value={visSight} min={25} max={250} step={25} unit=" km"
+              tooltip={SIGHT_VIS_TOOLTIP} onChange={setVisSight} />
+          </div>
+
+          <UploadPanel uploadResult={uploadResult} onUpload={handleUpload}
+            merge={mergeUpload} onMergeChange={setMergeUpload} />
+
+          <div className="param-section">
+            <ParamSlider label="Layer opacity" value={opacity} min={0.1} max={1} step={0.05} unit=""
+              onChange={setOpacity} />
+          </div>
+
           <button className="run-btn" onClick={run} disabled={loading}>
             {loading ? 'Running…' : 'Run Analysis'}
           </button>
-        </>
+        </div>
       }
-      layers={mapLayers}
-      legend={[
-        { id: 'wildness', label: 'Wildness Index', color: '#34d399', visible: visible.wildness, onToggle: () => setVisible((v) => ({ ...v, wildness: !v.wildness })) },
-        { id: 'viewshed', label: 'Cumulative Viewshed', color: '#ef4444', visible: visible.viewshed, onToggle: () => setVisible((v) => ({ ...v, viewshed: !v.viewshed })) },
-      ]}
-      viewResetKey={result ? JSON.stringify(result.extent) : undefined}
+      map={
+        <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+          <MapView rasters={rasters} />
+          {loading && <LoadingOverlay />}
+          {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
+        </div>
+      }
+      legend={
+        <LayerLegend items={[
+          { id: 'wild',     label: 'Wildness Index',       color: '#1b5e20', visible: showWild,     onToggle: () => setShowWild(v => !v)     },
+          { id: 'viewshed', label: 'Impacted (viewshed)',  color: '#b71c1c', visible: showViewshed, onToggle: () => setShowViewshed(v => !v) },
+        ]} />
+      }
       charts={
         <>
           <div className="stat-cards">
-            <div className="stat-card">
-              <span className="stat-value">{result ? `${(result.visible_impact_pct as number)?.toFixed(1)}%` : '—'}</span>
-              <span className="stat-label">Visible impact area</span>
-            </div>
+            <StatCard value={result ? `${result.wild_pct}%` : '—'}
+              label="Wild (out of sight/sound)" />
+            <StatCard value={result ? `${result.visible_impact_pct}%` : '—'}
+              label="Within impact range" />
+            <StatCard value={result ? `${(result.wild_area_km2 / 1e6).toFixed(1)} M km²` : '—'}
+              label="Wild area" />
+            <StatCard value={result ? `${result.n_facilities}` : '81'}
+              label="Facilities" sub="COMNAP v3.5.0 (2024)" />
           </div>
-          <HistogramChart histogram={result?.histogram as { counts: number[]; edges: number[] }} title="Wildness Index Distribution" />
+          {result?.histogram?.counts.length ? (
+            <HistogramChart histogram={result.histogram} title="Wildness Score Distribution" color="#1b5e20" />
+          ) : null}
         </>
       }
     />
