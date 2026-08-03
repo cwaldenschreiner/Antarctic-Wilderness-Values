@@ -42,12 +42,12 @@ export function WildnessPage() {
             visible_impact_pct:  pre.stats.wildness?.visible_impact_pct || 0,
             wild_area_km2:       pre.stats.wildness?.wild_area_km2 || 0,
             impacted_area_km2:   pre.stats.wildness?.impacted_area_km2 || 0,
-            total_continent_km2: 24_600_000,
+            total_continent_km2: 24600000,
             histogram:           { counts: [], edges: [] },
             n_facilities:        81,
             n_visitor_sites:     331,
             params:              {},
-          });
+          } as WildnessResult);
         }
       })
       .catch(() => {})
@@ -79,7 +79,7 @@ export function WildnessPage() {
     } catch (e: unknown) { setError(String(e)); }
   };
 
-  const coords = (result?.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+  const coords = DEFAULT_COORDS;
   const viewshedOpacity = opacity * 0.7;
   const rasters: RasterLayer[] = [
     ...(result?.wildness_png  ? [{ id: 'wild',     png_base64: result.wildness_png, coords, opacity,          visible: showWild     }] : []),

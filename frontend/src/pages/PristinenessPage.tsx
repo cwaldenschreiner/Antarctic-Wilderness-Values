@@ -41,7 +41,7 @@ export function PristinenessPage() {
             raster_coords:       pre.raster_coords,
             inviolate_pct:       pre.stats.pristineness?.inviolate_pct || 0,
             inviolate_area_km2:  pre.stats.pristineness?.inviolate_area_km2 || 0,
-            total_continent_km2: 24_600_000,
+            total_continent_km2: 24600000,
             n_patches:           pre.stats.pristineness?.n_patches || 0,
             largest_patch_km2:   pre.stats.pristineness?.largest_patch_km2 || 0,
             mean_patch_km2:      0,
@@ -50,7 +50,7 @@ export function PristinenessPage() {
             n_visitor_sites:     331,
             n_inviolate_polygons: 1733,
             params:              {},
-          });
+          } as PristinenessResult);
         }
       })
       .catch(() => {})
@@ -82,7 +82,7 @@ export function PristinenessPage() {
     } catch (e: unknown) { setError(String(e)); }
   };
 
-  const coords = (result?.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+  const coords = DEFAULT_COORDS;
   const inviolateOpacity = opacity * 0.8;
   const rasters: RasterLayer[] = [
     ...(result?.pristineness_png ? [{ id: 'prist',     png_base64: result.pristineness_png, coords, opacity,                  visible: showPrist    }] : []),

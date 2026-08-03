@@ -38,9 +38,7 @@ export function RemotenessPage() {
     fetchPrecomputed()
       .then((pre: PrecomputedResponse) => {
         if (pre.rasters.remoteness_score) {
-          const coords = (pre.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
-          setResult(prev => ({
-            ...prev,
+          setResult({
             score_png:            pre.rasters.remoteness_score,
             rank_png:             pre.rasters.remoteness_rank || '',
             raster_coords:        pre.raster_coords,
@@ -53,7 +51,7 @@ export function RemotenessPage() {
             n_facilities:         81,
             n_visitor_sites:      331,
             params:               {},
-          } as RemotenessResult));
+          } as RemotenessResult);
         }
       })
       .catch(() => {})
@@ -86,7 +84,7 @@ export function RemotenessPage() {
     } catch (e: unknown) { setError(String(e)); }
   };
 
-  const coords = (result?.raster_coords as unknown as [[number,number],[number,number],[number,number],[number,number]]) || DEFAULT_COORDS;
+  const coords = DEFAULT_COORDS;
   const rasters: RasterLayer[] = [
     ...(result?.score_png ? [{ id: 'score', png_base64: result.score_png, coords, opacity, visible: showScore }] : []),
     ...(result?.rank_png  ? [{ id: 'rank',  png_base64: result.rank_png,  coords, opacity, visible: showRank  }] : []),
