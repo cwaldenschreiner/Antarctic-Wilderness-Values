@@ -20,6 +20,7 @@ from app.analytics.compute import (
     load_precomputed_stats,
     _load_precomputed_png,
     RASTER_COORDS,
+    RASTER_IMAGE_EXTENT,
 )
 
 router = APIRouter()
@@ -110,6 +111,7 @@ def precomputed():
         "grids": grids,
         "stats": stats,
         "raster_coords": RASTER_COORDS,
+        "raster_extent": RASTER_IMAGE_EXTENT,
     }
 
 
