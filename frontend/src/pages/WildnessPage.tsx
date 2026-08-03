@@ -95,7 +95,7 @@ export function WildnessPage() {
           <IndicatorIntro
             summary='Areas out of sight and sound of human infrastructure and visitor activity — binary classification per IP 39 §6 (New Zealand, 2013).'
             analysis="Run Analysis checks every 50 km grid cell against facility and visitor sight/sound ranges. Cells beyond all thresholds are wild; cells inside any threshold are impacted. Adjust the two range sliders to explore sensitivity; uploads can add infrastructure."
-            outputs="The map shows the Wildness Index (100 = wild, 0 = impacted; negligible zeros are transparent) and an optional Impacted/viewshed overlay. Below the map: wild share, share within impact range, wild area (km²), facility count, and a score histogram after you run the analysis."
+            outputs="The map shows the Wildness Index (100 = wild / green, 0 = impacted / red) and an optional Impacted/viewshed overlay. Below the map: wild share, share within impact range, wild area (km²), facility count, and a score histogram after you run the analysis."
           />
 
           <div className="param-section">

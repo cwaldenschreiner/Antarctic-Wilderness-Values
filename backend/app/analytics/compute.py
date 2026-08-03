@@ -180,8 +180,6 @@ def compute_remoteness(
     score_png = _make_png(
         _full_grid(score),
         ["#1a0533", "#1565c0", "#0097a7", "#43a047", "#f9fbe7"],
-        transparent_below=0.0,
-        fade_span=5.0,
     )
     # Rank 0 is a real class (<5 km), so keep all ranks opaque on-continent.
     rank_png = _make_png(
@@ -247,13 +245,12 @@ def compute_wildness(
     wild_pct   = round(float((~impacted).sum() / N_CONT * 100), 1)
     impact_pct = round(100.0 - wild_pct, 1)
 
+    # Score 0 = impacted and is a real class — keep it opaque on-continent.
     wild_png = _make_png(
         _full_grid(score),
         ["#b71c1c", "#ef9a9a", "#fff9c4", "#66bb6a", "#1b5e20"],
-        transparent_below=0.0,
-        fade_span=1.0,
     )
-    # Binary impact mask: only impacted cells are visible.
+    # Presence overlay: only impacted cells are drawn; non-impacted stay clear.
     viewshed_png = _make_png(
         _full_grid(impacted.astype(float) * 100),
         ["#ef9a9a", "#b71c1c"],
@@ -340,13 +337,12 @@ def compute_pristineness(
 
     inv_pct = round(float(is_inv.sum() / N_CONT * 100), 1)
 
+    # Score 0 = most modified and is a real class — keep it opaque on-continent.
     prist_png = _make_png(
         _full_grid(score),
         ["#37474f", "#0277bd", "#00897b", "#2e7d32", "#f9fbe7"],
-        transparent_below=0.0,
-        fade_span=5.0,
     )
-    # Binary inviolate mask: non-inviolate cells stay fully transparent.
+    # Presence overlay: only inviolate cells are drawn.
     inv_png = _make_png(
         _full_grid(is_inv.astype(float) * 100),
         ["#66bb6a", "#1b5e20"],
