@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 export function HomePage() {
   return (
     <div className="home-page">
@@ -7,12 +9,25 @@ export function HomePage() {
           <p className="subtitle">ANT-MICI · WP3 — Monitoring cumulative impacts on wilderness character</p>
           <p>
             Antarctic tourism has grown for over 30 years, raising concerns about cumulative impacts
-            on biodiversity and wilderness values. This dashboard supports policymakers and the tourism
-            sector with interactive maps and analytics for three pillars of Antarctic wilderness character.
+            on biodiversity and wilderness values. This dashboard is part of{' '}
+            <a
+              href="https://www.rug.nl/research/arctisch-centrum/projects/pt-repair/ant-mici/?lang=en"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="ext-link"
+            >
+              ANT-MICI
+            </a>
+            {' '}(University of Groningen Arctic Centre / NWO PT-REPAIR) and supports
+            policymakers and the tourism sector with interactive maps of three wilderness-value
+            pillars — alongside the programme’s wider goals of tourism forecasting, biodiversity
+            mapping, impact inventory, monitoring, and regulatory tools.
           </p>
           <p>
             Methods follow Summerson &amp; Bishop (2012) and ATCM XXXVI IP 39 (New Zealand, 2013),
-            with the inviolate wilderness baseline from Leihy et al. (2020).
+            with the inviolate wilderness baseline from Leihy et al. (2020). See the{' '}
+            <Link to="/methodology" className="ext-link">Methodology</Link> tab for full detail and
+            linked sources.
           </p>
           <div className="hero-badges">
             <span className="badge badge-blue">50 km grid · EPSG:3031</span>

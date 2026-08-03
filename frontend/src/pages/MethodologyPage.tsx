@@ -5,6 +5,11 @@ type Ref = { id: string; text: string; href?: string };
 
 const REFS: Ref[] = [
   {
+    id: 'ant-mici-rug',
+    text: 'ANT-MICI — Antarctic tourism: developing knowledge and tools to minimise cumulative impacts on biodiversity and wilderness values in Antarctica. Arctic Centre, University of Groningen (PT-REPAIR / NWO NWA.20.1435.004).',
+    href: 'https://www.rug.nl/research/arctisch-centrum/projects/pt-repair/ant-mici/?lang=en',
+  },
+  {
     id: 'summerson-bishop-2012',
     text: 'Summerson, R. & Bishop, I.D. (2012). The impact of human activities on wilderness and aesthetic values in Antarctica. Polar Research, 31, 10858.',
     href: 'https://doi.org/10.3402/polar.v31i0.10858',
@@ -74,11 +79,16 @@ export function MethodologyPage() {
         <h2>Methodology</h2>
         <p className="intro">
           Detailed description of each wilderness-value analysis in this dashboard — beyond
-          the short tooltips on the indicator pages. Methods follow Summerson &amp; Bishop
-          (2012) and ATCM XXXVI IP 39 (New Zealand, 2013), with the pristineness baseline
-          from Leihy et al. (2020). Open an indicator page to run the analysis interactively.
+          the short tooltips on the indicator pages. This WP3 dashboard is part of{' '}
+          <ExtLink href="https://www.rug.nl/research/arctisch-centrum/projects/pt-repair/ant-mici/?lang=en">
+            ANT-MICI
+          </ExtLink>
+          {' '}(University of Groningen Arctic Centre / PT-REPAIR). Indicator methods follow
+          Summerson &amp; Bishop (2012) and ATCM XXXVI IP 39 (New Zealand, 2013), with the
+          pristineness baseline from Leihy et al. (2020).
         </p>
         <nav className="method-toc" aria-label="On this page">
+          <a href="#about">About ANT-MICI</a>
           <a href="#common">Common grid</a>
           <a href="#remoteness">Remoteness</a>
           <a href="#wildness">Wildness</a>
@@ -87,6 +97,35 @@ export function MethodologyPage() {
           <a href="#references">References</a>
         </nav>
       </header>
+
+      <section id="about" className="method-section">
+        <h3>About ANT-MICI</h3>
+        <p>
+          <strong>ANT-MICI</strong> — <em>Antarctic tourism: developing knowledge and tools
+          to minimise cumulative impacts on biodiversity and wilderness values in
+          Antarctica</em> — responds to more than 30 years of growth in tourist numbers and
+          visited sites. The cumulative effects of these activities on Antarctic biodiversity
+          and wilderness values remain poorly known. Working with societal partners, the
+          programme aims to give policymakers and the tourism sector: a 20-year Antarctic
+          tourism forecast; maps of biodiversity and wilderness values; an inventory of
+          cumulative impacts; a monitoring system; and strategies and regulatory tools to
+          minimise future impacts <Cite id="ant-mici-rug" />.
+        </p>
+        <p>
+          This interactive dashboard is the WP3 wilderness-values mapping component of that
+          work. Project lead: Kees Bastmeijer (Arctic Centre, University of Groningen).
+          Co-leads include Steven Chown (Monash University), Peter Convey and Jasmine Lee
+          (British Antarctic Survey), Rien Aerts and Stef Bokhorst (Vrije Universiteit
+          Amsterdam), and Yu-Fai Leung (North Carolina State University). Funding: NWO
+          PT-REPAIR programme, grant <code>NWA.20.1435.004</code>.
+        </p>
+        <p>
+          Project page:{' '}
+          <ExtLink href="https://www.rug.nl/research/arctisch-centrum/projects/pt-repair/ant-mici/?lang=en">
+            rug.nl — ANT-MICI (PT-REPAIR)
+          </ExtLink>
+        </p>
+      </section>
 
       <section id="common" className="method-section">
         <h3>Common analysis grid</h3>
