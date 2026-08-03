@@ -43,6 +43,30 @@
       "tabs": [
         "pristineness"
       ]
+    },
+    {
+      "id": "coastline",
+      "name": "Antarctic Land (Natural Earth 10m)",
+      "source": "Natural Earth 10m Physical Land",
+      "license": "Public domain",
+      "vintage": "2022",
+      "crs": "EPSG:4326",
+      "n_features": 208,
+      "description": "Higher-resolution land polygons south of 55°S used as the interactive basemap coastline.",
+      "citation": "Natural Earth (naturalearthdata.com). Made with Natural Earth.",
+      "tabs": ["remoteness", "wildness", "pristineness"]
+    },
+    {
+      "id": "ice_shelves",
+      "name": "Antarctic Ice Shelves (Natural Earth 10m)",
+      "source": "Natural Earth 10m Antarctic Ice Shelves",
+      "license": "Public domain",
+      "vintage": "2022",
+      "crs": "EPSG:4326",
+      "n_features": 159,
+      "description": "Ice shelf polygons for basemap context under analysis overlays.",
+      "citation": "Natural Earth (naturalearthdata.com). Made with Natural Earth.",
+      "tabs": ["remoteness", "wildness", "pristineness"]
     }
   ],
   "precomputed_rasters": {
