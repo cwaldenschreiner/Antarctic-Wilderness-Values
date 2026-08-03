@@ -43,7 +43,8 @@ const PROJ_3031 = getProjection('EPSG:3031')!;
 PROJ_3031.setExtent([-3333134, -3333134, 3333134, 3333134]);
 PROJ_3031.setWorldExtent([-180, -90, 180, -60]);
 
-const RASTER_EXTENT: Extent = [-3000000, -3000000, 3000000, 3000000];
+// Outer edges of 50 km cells centred on ±3 000 000 m (not centre-to-centre).
+const RASTER_EXTENT: Extent = [-3025000, -3025000, 3025000, 3025000];
 const ANTARCTIC_EXTENT: Extent = [-2800000, -2800000, 2800000, 2800000];
 const API_BASE = (import.meta.env.VITE_API_URL as string) || '/api';
 const ROTATE_STEP = Math.PI / 6;
@@ -270,7 +271,7 @@ function sampleGrid(payload: IdentifyGridPayload, x: number, y: number): number 
   const [xmin, ymin, xmax, ymax] = payload.extent;
   if (x < xmin || x > xmax || y < ymin || y > ymax) return null;
   const col = Math.min(nx - 1, Math.max(0, Math.floor(((x - xmin) / (xmax - xmin)) * nx)));
-  // Row 0 = north (maxY), matching flipped PNG
+  // Row 0 = maxY (north), matching vertically flipped analysis PNG
   const row = Math.min(ny - 1, Math.max(0, Math.floor(((ymax - y) / (ymax - ymin)) * ny)));
   const data = cachedGrid(payload);
   const v = data[row * nx + col];

@@ -41,7 +41,18 @@ GRID_CONT = np.column_stack([_GXf[CONT_IDX], _GYf[CONT_IDX]])
 # (data are still 50 km cells — this only avoids blurry bilinear stretching).
 PNG_DISPLAY_SCALE = 8
 
-# Image bounds for MapLibre raster overlay (EPSG:4326 corners, south of 60°S)
+# ImageStatic / identify extent = outer edges of the 50 km cells whose centres
+# lie on ±EXTENT_M. Using centre-to-centre bounds misplaces each pixel by up to
+# half a cell (~25 km) relative to facilities and other vector inputs.
+_HALF = RES_M / 2
+RASTER_IMAGE_EXTENT = [
+    -EXTENT_M - _HALF,
+    -EXTENT_M - _HALF,
+    EXTENT_M + _HALF,
+    EXTENT_M + _HALF,
+]
+
+# Legacy WGS84 corner hint (not used for OpenLayers placement)
 RASTER_COORDS = [[-180, -55], [180, -55], [180, -85.05], [-180, -85.05]]
 
 
@@ -135,7 +146,7 @@ def _encode_grid(arr_2d: np.ndarray) -> dict[str, Any]:
     packed = np.where(np.isfinite(flipped), flipped, np.float32(-1.0))
     return {
         "shape": [int(NY), int(NX)],
-        "extent": [-EXTENT_M, -EXTENT_M, EXTENT_M, EXTENT_M],
+        "extent": list(RASTER_IMAGE_EXTENT),
         "nodata": -1.0,
         "data_b64": base64.b64encode(np.ascontiguousarray(packed).tobytes()).decode("ascii"),
     }
