@@ -95,6 +95,8 @@ export interface PrecomputedResponse {
     grid?: { resolution_km: number; n_continent_cells: number };
   };
   raster_coords: number[][];
+  /** EPSG:3031 ImageStatic extent [minX, minY, maxX, maxY] (cell outer edges). */
+  raster_extent?: [number, number, number, number];
 }
 
 export interface UploadResult {
