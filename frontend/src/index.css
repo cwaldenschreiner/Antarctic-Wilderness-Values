@@ -155,10 +155,7 @@ body {
 }
 .info-btn:hover { border-color: var(--accent); color: var(--accent); }
 .info-bubble {
-  position: absolute;
-  bottom: calc(100% + 6px);
-  left: 50%;
-  transform: translateX(-50%);
+  position: fixed;
   width: 240px;
   background: var(--surface3);
   border: 1px solid var(--border);
@@ -167,8 +164,9 @@ body {
   font-size: 0.78rem;
   color: var(--muted);
   line-height: 1.5;
-  z-index: 100;
-  box-shadow: 0 4px 16px rgba(0,0,0,0.4);
+  z-index: 9999;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  pointer-events: auto;
 }
 .info-close {
   float: right;

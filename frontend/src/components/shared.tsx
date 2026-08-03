@@ -1,17 +1,51 @@
-import { ReactNode, useState } from 'react';
+import { ReactNode, useState, useRef, useEffect } from 'react';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import type { UploadResult } from '../api/client';
 
 // ── Tooltip ────────────────────────────────────────────────────────────────────
 export function InfoTooltip({ text }: { text: string }) {
-  const [open, setOpen] = useState(false);
+  const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
+  const btnRef = useRef<HTMLButtonElement>(null);
+
+  const toggle = () => {
+    if (pos) {
+      setPos(null);
+    } else if (btnRef.current) {
+      const r = btnRef.current.getBoundingClientRect();
+      setPos({
+        top:  r.top - 8,           // above the button
+        left: r.left + r.width / 2,
+      });
+    }
+  };
+
+  // Close on scroll or resize
+  useEffect(() => {
+    if (!pos) return;
+    const close = () => setPos(null);
+    window.addEventListener('scroll', close, true);
+    window.addEventListener('resize', close);
+    return () => {
+      window.removeEventListener('scroll', close, true);
+      window.removeEventListener('resize', close);
+    };
+  }, [pos]);
+
   return (
     <span className="info-tooltip-wrap">
-      <button className="info-btn" onClick={() => setOpen(o => !o)} aria-label="Information">?</button>
-      {open && (
-        <span className="info-bubble" role="tooltip">
+      <button ref={btnRef} className="info-btn" onClick={toggle} aria-label="Information">?</button>
+      {pos && (
+        <span
+          className="info-bubble"
+          style={{
+            top:       pos.top,
+            left:      pos.left,
+            transform: 'translate(-50%, -100%)',
+          }}
+          role="tooltip"
+        >
           {text}
-          <button className="info-close" onClick={() => setOpen(false)}>✕</button>
+          <button className="info-close" onClick={() => setPos(null)}>✕</button>
         </span>
       )}
     </span>
