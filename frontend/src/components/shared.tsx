@@ -1,4 +1,5 @@
 import { ReactNode, useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGrid, Cell } from 'recharts';
 import type { UploadResult } from '../api/client';
 
@@ -113,10 +114,12 @@ export function IndicatorIntro({
   summary,
   analysis,
   outputs,
+  methodologyPath = '/methodology',
 }: {
   summary: string;
   analysis: string;
   outputs: string;
+  methodologyPath?: string;
 }) {
   return (
     <div className="indicator-intro">
@@ -126,6 +129,9 @@ export function IndicatorIntro({
         <p>{analysis}</p>
         <h4>What the outputs mean</h4>
         <p>{outputs}</p>
+        <Link to={methodologyPath} className="indicator-method-link">
+          Full methodology &amp; sources →
+        </Link>
       </div>
     </div>
   );

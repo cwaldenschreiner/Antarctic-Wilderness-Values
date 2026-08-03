@@ -98,6 +98,7 @@ export function RemotenessPage() {
             summary="Isolation from human infrastructure and visitor activity, following IP 39 Tables 1 & 4 (New Zealand, 2013) and Summerson & Bishop (2012)."
             analysis="Run Analysis builds a continent-wide 50 km grid and measures distance from each cell to COMNAP facilities and ATS visitor sites. Facility and visitor decay radii (and visitor weight) control how quickly human presence fades with distance. Optional uploads can add or replace infrastructure points."
             outputs="The map shows a Remoteness Score (0–100; higher = more remote) and an optional Remoteness Rank layer (<5 km, 5–20 km, 20–50 km, >50 km). Below the map: share/area of high-remoteness cells, mean score, facility count, rank distribution, and score histogram."
+            methodologyPath="/methodology#remoteness"
           />
 
           <div className="param-section">

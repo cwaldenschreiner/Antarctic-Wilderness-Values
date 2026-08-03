@@ -99,6 +99,7 @@ export function PristinenessPage() {
             summary="Degree of human modification: Leihy et al. (2020) inviolate wilderness baseline plus ATS visitor-site intensity."
             analysis="Run Analysis scores each 50 km cell using inviolate status and distance-weighted visit impact. Base and max visit-decay radii control how far high-traffic sites reduce pristineness. Optional uploads can add footprints that further lower scores."
             outputs="The map shows the Pristineness Index (0–100; higher = less modified) and an optional Inviolate Areas mask. Below the map: inviolate share and extent, number of contiguous patches, largest patch size, score histogram, and data-source citations."
+            methodologyPath="/methodology#pristineness"
           />
 
           <div className="param-section">

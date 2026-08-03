@@ -6,6 +6,7 @@ const TABS = [
   { to: '/wildness',     label: 'Wildness' },
   { to: '/pristineness', label: 'Pristineness' },
   { to: '/data-sources', label: 'Data Sources' },
+  { to: '/methodology',  label: 'Methodology' },
 ];
 
 export function TabNav() {

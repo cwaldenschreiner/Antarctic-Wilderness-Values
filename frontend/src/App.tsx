@@ -5,6 +5,7 @@ import { RemotenessPage } from './pages/RemotenessPage';
 import { WildnessPage } from './pages/WildnessPage';
 import { PristinenessPage } from './pages/PristinenessPage';
 import { DataSourcesPage } from './pages/DataSourcesPage';
+import { MethodologyPage } from './pages/MethodologyPage';
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
             <Route path="/wildness"     element={<WildnessPage />} />
             <Route path="/pristineness" element={<PristinenessPage />} />
             <Route path="/data-sources" element={<DataSourcesPage />} />
+            <Route path="/methodology"  element={<MethodologyPage />} />
           </Routes>
         </main>
       </div>

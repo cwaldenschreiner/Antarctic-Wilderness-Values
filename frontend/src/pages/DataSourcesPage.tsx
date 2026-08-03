@@ -13,6 +13,16 @@ export function DataSourcesPage() {
       <p className="intro">
         All datasets used in ANT-MICI WP3 wilderness value indicator analysis.
         Methods follow Summerson (2012), Summerson &amp; Bishop (2012), and ATCM XXXVI IP 39 (New Zealand, 2013).
+        Programme context:{' '}
+        <a
+          href="https://www.rug.nl/research/arctisch-centrum/projects/pt-repair/ant-mici/?lang=en"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="ext-link"
+        >
+          ANT-MICI at the University of Groningen Arctic Centre
+        </a>
+        .
       </p>
 
       <div className="catalog-grid">
