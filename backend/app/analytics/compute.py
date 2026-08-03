@@ -38,7 +38,7 @@ CELL_KM2 = (RES_M / 1000) ** 2
 GRID_CONT = np.column_stack([_GXf[CONT_IDX], _GYf[CONT_IDX]])
 
 # Image bounds for MapLibre raster overlay (EPSG:4326 corners, south of 60°S)
-RASTER_COORDS = [[-180, -60], [180, -60], [180, -90], [-180, -90]]
+RASTER_COORDS = [[-180, -55], [180, -55], [180, -85.05], [-180, -85.05]]
 
 
 # ── Data loading ───────────────────────────────────────────────────────────────

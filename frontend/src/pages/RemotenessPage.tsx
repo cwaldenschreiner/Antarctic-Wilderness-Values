@@ -14,7 +14,7 @@ const RANK_TOOLTIP   = 'Ranks follow Summerson & Bishop (2012) and ATCM XXXVI IP
 const HIST_TOOLTIP   = 'Distribution of remoteness scores across all 9,841 Antarctic grid cells (50 km resolution, EPSG:3031). A score of 100 indicates the cell is maximally remote from all known human activity.';
 
 const DEFAULT_COORDS: [[number,number],[number,number],[number,number],[number,number]] =
-  [[-180,-60],[180,-60],[180,-90],[-180,-90]];
+  [[-180,-55],[180,-55],[180,-85.05],[-180,-85.05]];
 
 export function RemotenessPage() {
   const [result,       setResult]       = useState<RemotenessResult | null>(null);

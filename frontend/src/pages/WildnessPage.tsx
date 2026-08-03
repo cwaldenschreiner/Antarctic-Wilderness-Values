@@ -13,7 +13,7 @@ const WILDNESS_TOOLTIP = 'Wildness measures the proportion of the continent that
 const SIGHT_FAC_TOOLTIP = 'Maximum distance (km) at which a permanent facility (station, airstrip, etc.) can be seen or heard. At 50 km resolution, thresholds below 50 km are sub-pixel; 100 km represents the approximate range of large station complexes including helicopter operations and radio communication noise.';
 const SIGHT_VIS_TOOLTIP = 'Maximum distance at which a visitor site has a measurable wildness impact. Visitor sites are transient and have lower impact radius than permanent facilities.';
 
-const DEFAULT_COORDS = [[-180,-60],[180,-60],[180,-90],[-180,-90]] as [[number,number],[number,number],[number,number],[number,number]];
+const DEFAULT_COORDS = [[-180,-55],[180,-55],[180,-85.05],[-180,-85.05]] as [[number,number],[number,number],[number,number],[number,number]];
 
 export function WildnessPage() {
   const [result,       setResult]       = useState<WildnessResult | null>(null);

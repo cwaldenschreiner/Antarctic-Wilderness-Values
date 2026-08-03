@@ -14,7 +14,7 @@ const BASE_DECAY_TOOLTIP = 'Baseline exponential decay distance (km) from visito
 const MAX_DECAY_TOOLTIP = 'Additional decay added for high-traffic sites (log-scaled by 5-year visit total). High-traffic Peninsula sites (e.g. Neko Harbour: 76,214 visits) receive a much wider impact radius than remote, rarely-visited sites.';
 const INVIOLATE_TOOLTIP = 'The inviolate wilderness layer is taken directly from Leihy, R.I. et al. (2020) "Antarctica\'s wilderness fails to capture continent\'s biodiversity", Nature 583:567–571. It identifies 1,733 grid cells (4.3 million km²) with no recorded human visitation across ~2.7 million activity records spanning 1819–2018.';
 
-const DEFAULT_COORDS = [[-180,-60],[180,-60],[180,-90],[-180,-90]] as [[number,number],[number,number],[number,number],[number,number]];
+const DEFAULT_COORDS = [[-180,-55],[180,-55],[180,-85.05],[-180,-85.05]] as [[number,number],[number,number],[number,number],[number,number]];
 
 export function PristinenessPage() {
   const [result,        setResult]       = useState<PristinenessResult | null>(null);
