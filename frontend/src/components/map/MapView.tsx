@@ -1,10 +1,11 @@
 /**
  * MapView — OpenLayers map in EPSG:3031 (South Polar Stereographic)
  *
- * Projection: EPSG:3031
- * Basemap:    OpenStreetMap tiles reprojected on-the-fly via OL
- * Rasters:    Rendered as ImageStatic layers with correct 3031 extent
- * Vectors:    GeoJSON features reprojected from EPSG:4326 → EPSG:3031
+ * Projection: EPSG:3031  (registered via proj4)
+ * Basemap:    OpenStreetMap tiles reprojected on-the-fly by OL
+ * Rasters:    PNG images generated natively in EPSG:3031 pixel space,
+ *             declared with projection='EPSG:3031' — zero reprojection error.
+ *             Extent: ±3,000,000 m from South Pole (covers full Antarctic region).
  */
 
 import { useEffect, useRef } from 'react';
@@ -16,11 +17,11 @@ import ImageLayer from 'ol/layer/Image';
 import XYZ from 'ol/source/XYZ';
 import ImageStatic from 'ol/source/ImageStatic';
 import { register } from 'ol/proj/proj4';
-import { get as getProjection, transformExtent } from 'ol/proj';
-import { Extent } from 'ol/extent';
+import { get as getProjection } from 'ol/proj';
+import type { Extent } from 'ol/extent';
 import 'ol/ol.css';
 
-// ── Register EPSG:3031 with proj4 ───────────────────────────────────────────
+// ── Register EPSG:3031 ───────────────────────────────────────────────────────
 proj4.defs(
   'EPSG:3031',
   '+proj=stere +lat_0=-90 +lat_ts=-71 +lon_0=0 +k=1 ' +
@@ -32,18 +33,11 @@ const PROJ_3031 = getProjection('EPSG:3031')!;
 PROJ_3031.setExtent([-3333134, -3333134, 3333134, 3333134]);
 PROJ_3031.setWorldExtent([-180, -90, 180, -60]);
 
-// Antarctic view extent in EPSG:3031 (metres from pole)
-// Covers continent + Peninsula comfortably
-const ANTARCTIC_EXTENT_3031: Extent = [-2800000, -2800000, 2800000, 2800000];
+// Rasters are 600×600 px covering ±3,000,000 m from pole in EPSG:3031
+const RASTER_EXTENT_3031: Extent = [-3000000, -3000000, 3000000, 3000000];
 
-// Raster extent: matches the WGS84 bounds used when generating PNGs
-// lon -180..180, lat -85.05..-55 → transform to 3031
-const RASTER_BOUNDS_4326 = [-180, -85.05, 180, -55.0];
-const RASTER_EXTENT_3031: Extent = transformExtent(
-  RASTER_BOUNDS_4326,
-  'EPSG:4326',
-  'EPSG:3031'
-);
+// Initial view fits the Antarctic continent (±2,800 km)
+const ANTARCTIC_EXTENT_3031: Extent = [-2800000, -2800000, 2800000, 2800000];
 
 export interface RasterLayer {
   id: string;
@@ -60,14 +54,12 @@ interface Props {
 export function MapView({ rasters }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef       = useRef<Map | null>(null);
-  // Track OL ImageLayer instances by raster id
   const layersRef    = useRef<Record<string, ImageLayer<ImageStatic>>>({});
 
-  // ── Init map once ──────────────────────────────────────────────────────────
+  // ── Init map once ─────────────────────────────────────────────────────────
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
 
-    // OSM basemap reprojected into EPSG:3031
     const basemap = new TileLayer({
       source: new XYZ({
         url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
@@ -83,18 +75,16 @@ export function MapView({ rasters }: Props) {
       layers: [basemap],
       view: new View({
         projection: PROJ_3031,
-        center: [0, 0],           // South Pole in EPSG:3031
+        center: [0, 0],        // South Pole
         zoom: 1,
-        extent: [-4000000, -4000000, 4000000, 4000000],
         minZoom: 0,
         maxZoom: 12,
       }),
     });
 
-    // Fit view to Antarctic extent on load
     map.getView().fit(ANTARCTIC_EXTENT_3031, {
       size: map.getSize() ?? [800, 600],
-      padding: [20, 20, 20, 20],
+      padding: [24, 24, 24, 24],
     });
 
     mapRef.current = map;
@@ -106,14 +96,14 @@ export function MapView({ rasters }: Props) {
     };
   }, []);
 
-  // ── Sync raster layers ─────────────────────────────────────────────────────
+  // ── Sync raster layers whenever props change ───────────────────────────────
   useEffect(() => {
     const map = mapRef.current;
     if (!map) return;
 
     const currentIds = new Set(rasters.map(r => r.id));
 
-    // Remove layers that are no longer in rasters
+    // Remove stale layers
     Object.keys(layersRef.current).forEach(id => {
       if (!currentIds.has(id)) {
         map.removeLayer(layersRef.current[id]);
@@ -122,41 +112,38 @@ export function MapView({ rasters }: Props) {
     });
 
     rasters.forEach(raster => {
-      const url = `data:image/png;base64,${raster.png_base64}`;
+      const url      = `data:image/png;base64,${raster.png_base64}`;
       const existing = layersRef.current[raster.id];
 
       if (!existing) {
-        // Create new ImageStatic layer
-        // The PNG was generated in WGS84 pixel space covering RASTER_BOUNDS_4326,
-        // but OL will render it correctly into EPSG:3031 view using RASTER_EXTENT_3031
+        // Raster was generated natively in EPSG:3031 pixel space:
+        // projection='EPSG:3031', imageExtent=±3,000,000 m
+        // OL places it with zero reprojection — perfect polar stereographic accuracy.
         const layer = new ImageLayer({
           source: new ImageStatic({
             url,
-            projection: 'EPSG:4326',
-            imageExtent: RASTER_BOUNDS_4326,
+            projection: 'EPSG:3031',
+            imageExtent: RASTER_EXTENT_3031,
             crossOrigin: 'anonymous',
           }),
           opacity: raster.visible ? raster.opacity : 0,
-          extent: RASTER_EXTENT_3031,
         });
         map.addLayer(layer);
         layersRef.current[raster.id] = layer;
       } else {
-        // Update opacity/visibility
+        // Update opacity / visibility
         existing.setOpacity(raster.visible ? raster.opacity : 0);
 
-        // If png data changed, replace the source
-        const src = existing.getSource() as ImageStatic;
-        const currentUrl = (src as unknown as { url_: string }).url_;
-        if (currentUrl !== url) {
-          existing.setSource(
-            new ImageStatic({
-              url,
-              projection: 'EPSG:4326',
-              imageExtent: RASTER_BOUNDS_4326,
-              crossOrigin: 'anonymous',
-            })
-          );
+        // Replace source if image data changed
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const src = existing.getSource() as any;
+        if (src?.url_ !== url) {
+          existing.setSource(new ImageStatic({
+            url,
+            projection: 'EPSG:3031',
+            imageExtent: RASTER_EXTENT_3031,
+            crossOrigin: 'anonymous',
+          }));
         }
       }
     });

@@ -1,14 +1,14 @@
 {
   "remoteness": {
     "rank_pcts": {
-      "<5 km (Low)": 0.1,
+      "<5 km (Low)": 0.0,
       "5\u201320 km": 0.4,
-      "20\u201350 km": 1.8,
-      ">50 km (High)": 97.7
+      "20\u201350 km": 1.9,
+      ">50 km (High)": 97.6
     },
     "mean_score": 92.01,
-    "high_remoteness_pct": 97.7,
-    "high_remoteness_km2": 24037500,
+    "high_remoteness_pct": 97.6,
+    "high_remoteness_km2": 24046500,
     "total_continent_km2": 24602500,
     "n_visitor_sites": 331,
     "n_facilities": 81,
@@ -26,8 +26,8 @@
   "wildness": {
     "wild_pct": 94.6,
     "visible_impact_pct": 5.4,
-    "wild_area_km2": 23290625,
-    "impacted_area_km2": 1320000,
+    "wild_area_km2": 23299700,
+    "impacted_area_km2": 1329100,
     "threshold_facility_km": 100.0,
     "threshold_visitor_km": 50.0,
     "n_visitor_sites": 331,
@@ -39,10 +39,10 @@
     ]
   },
   "pristineness": {
-    "inviolate_pct": 21.5,
-    "inviolate_area_km2": 5293750,
-    "n_patches": 41,
-    "largest_patch_km2": 990000,
+    "inviolate_pct": 21.4,
+    "inviolate_area_km2": 5267500,
+    "n_patches": 49,
+    "largest_patch_km2": 974100,
     "mean_patch_km2": 129573.2,
     "mean_score": 64.48,
     "n_visitor_sites": 331,
@@ -54,10 +54,12 @@
     ]
   },
   "grid": {
-    "resolution_km": 25,
+    "resolution_km": 10.0,
     "projection": "EPSG:3031",
-    "n_continent_cells": 39377,
-    "cell_area_km2": 2500
+    "extent_m": 3000000,
+    "img_size_px": 600,
+    "n_continent_px": 246288,
+    "cell_area_km2": 100.0
   },
   "raster_coords": [
     [
@@ -76,5 +78,11 @@
       -180.0,
       -85.05
     ]
+  ],
+  "raster_extent_3031": [
+    -3000000,
+    -3000000,
+    3000000,
+    3000000
   ]
 }
