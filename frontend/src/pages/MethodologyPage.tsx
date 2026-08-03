@@ -132,8 +132,10 @@ export function MethodologyPage() {
         <p>
           All three indicators are computed on the same continent-wide lattice in
           South Polar Stereographic projection (<strong>EPSG:3031</strong>), covering roughly
-          ±3,000 km from the South Pole at <strong>50 km</strong> cell spacing (~9,841 land cells
-          inside a 2,800 km radius mask). Distance calculations use projected metres
+          ±3,000 km from the South Pole at <strong>50 km</strong> cell spacing. The analysis
+          domain is a 2,800 km radius disk plus near-land cells out to 3,300 km so the
+          South Shetland Islands and Elephant Island are included without filling the
+          intervening open ocean. Distance calculations use projected metres
           (k-d tree nearest neighbour), so kilometres are Euclidean in EPSG:3031 — appropriate
           for polar work and consistent across Remoteness, Wildness, and Pristineness.
         </p>

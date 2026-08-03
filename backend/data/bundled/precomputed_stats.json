@@ -1,30 +1,30 @@
 {
   "remoteness": {
     "rank_pcts": {
-      "<5 km (Low)": 0.0,
-      "5\u201320 km": 0.5,
-      "20\u201350 km": 1.7,
-      ">50 km (High)": 97.7
+      "<5 km (Low)": 0.1,
+      "5\u201320 km": 0.7,
+      "20\u201350 km": 2.0,
+      ">50 km (High)": 97.2
     },
-    "mean_score": 92.0,
-    "high_remoteness_pct": 97.7,
-    "high_remoteness_km2": 24037500,
-    "total_continent_km2": 24602500
+    "mean_score": 91.5,
+    "high_remoteness_pct": 97.2,
+    "high_remoteness_km2": 24122500,
+    "total_continent_km2": 24827500
   },
   "wildness": {
-    "wild_pct": 94.8,
-    "visible_impact_pct": 5.2,
-    "wild_area_km2": 23322500,
-    "impacted_area_km2": 1280000,
-    "total_continent_km2": 24602500
+    "wild_pct": 94.1,
+    "visible_impact_pct": 5.9,
+    "wild_area_km2": 23372500,
+    "impacted_area_km2": 1455000,
+    "total_continent_km2": 24827500
   },
   "pristineness": {
-    "inviolate_pct": 21.6,
+    "inviolate_pct": 21.4,
     "inviolate_area_km2": 5312500,
-    "total_continent_km2": 24602500,
+    "total_continent_km2": 24827500,
     "n_patches": 41,
     "largest_patch_km2": 990000,
     "mean_patch_km2": 129573.0,
-    "mean_score": 63.7
+    "mean_score": 63.3
   }
 }

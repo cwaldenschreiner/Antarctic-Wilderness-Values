@@ -25,16 +25,66 @@ DATA_DIR = Path(__file__).resolve().parents[2] / "data" / "bundled"
 # ── Grid constants ─────────────────────────────────────────────────────────────
 RES_M = 50_000
 EXTENT_M = 3_000_000
+# Inner circular domain covers the continental main. An outer ring out to
+# CONT_RADIUS_M adds only cells near land so South Shetland / Elephant Island
+# (and South Orkney) are scored without painting a large empty ocean annulus.
+CONT_RADIUS_INNER_M = 2_800_000
+CONT_RADIUS_M = 3_300_000
+CONT_NEAR_LAND_M = 75_000  # 1.5 cells — keeps island shelves, drops open ocean
 _xs = np.arange(-EXTENT_M, EXTENT_M + RES_M, RES_M, dtype=np.float64)
 _ys = np.arange(-EXTENT_M, EXTENT_M + RES_M, RES_M, dtype=np.float64)
 _GX, _GY = np.meshgrid(_xs, _ys)
 NY, NX = _GX.shape
 _GXf, _GYf = _GX.ravel(), _GY.ravel()
 _RADIUS = np.sqrt(_GXf**2 + _GYf**2)
-CONT_MASK = _RADIUS < 2_800_000
+CELL_KM2 = (RES_M / 1000) ** 2
+
+
+def _land_vertex_points() -> np.ndarray:
+    """Sample coastline + ice-shelf vertices in EPSG:3031 for near-land masking."""
+    pts: list[np.ndarray] = []
+    for name in ("coastline", "ice_shelves"):
+        path = DATA_DIR / f"{name}.geojson"
+        if not path.exists():
+            continue
+        gdf = gpd.read_file(str(path))
+        if gdf.crs is None:
+            gdf = gdf.set_crs("EPSG:4326")
+        gdf = gdf.to_crs("EPSG:3031")
+        for geom in gdf.geometry:
+            if geom is None or geom.is_empty:
+                continue
+            polys = geom.geoms if geom.geom_type == "MultiPolygon" else [geom]
+            for poly in polys:
+                if poly.geom_type != "Polygon":
+                    continue
+                xs, ys = poly.exterior.coords.xy
+                pts.append(np.column_stack([xs, ys]))
+    if not pts:
+        return np.empty((0, 2), dtype=np.float64)
+    # Subsample vertices — 50 km cells do not need every coastline node.
+    return np.vstack(pts)[::3]
+
+
+def _build_cont_mask() -> np.ndarray:
+    """Boolean mask over the flat grid: inner disk ∪ near-land outer ring."""
+    mask = _RADIUS < CONT_RADIUS_INNER_M
+    outer = (_RADIUS >= CONT_RADIUS_INNER_M) & (_RADIUS < CONT_RADIUS_M)
+    if not outer.any():
+        return mask
+    land_pts = _land_vertex_points()
+    if len(land_pts) == 0:
+        # Fallback: full outer disk if basemap polygons are unavailable.
+        return _RADIUS < CONT_RADIUS_M
+    idx = np.where(outer)[0]
+    dists = cKDTree(land_pts).query(np.column_stack([_GXf[idx], _GYf[idx]]), k=1)[0]
+    mask[idx[dists <= CONT_NEAR_LAND_M]] = True
+    return mask
+
+
+CONT_MASK = _build_cont_mask()
 CONT_IDX = np.where(CONT_MASK)[0]
 N_CONT = int(CONT_MASK.sum())
-CELL_KM2 = (RES_M / 1000) ** 2
 GRID_CONT = np.column_stack([_GXf[CONT_IDX], _GYf[CONT_IDX]])
 
 # Upsample analysis PNGs with nearest-neighbour so zoomed views stay crisp
