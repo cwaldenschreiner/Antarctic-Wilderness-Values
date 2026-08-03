@@ -217,17 +217,21 @@ body {
 .info-btn:hover { border-color: var(--accent); color: var(--accent); }
 .info-bubble {
   position: fixed;
-  width: 240px;
+  width: min(300px, calc(100vw - 20px));
+  max-height: min(320px, calc(100vh - 20px));
+  overflow-y: auto;
   background: var(--surface3);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.8rem;
   font-size: 0.78rem;
   color: var(--muted);
   line-height: 1.5;
-  z-index: 9999;
-  box-shadow: 0 4px 24px rgba(0,0,0,0.5);
+  z-index: 10000;
+  box-shadow: 0 8px 28px rgba(0,0,0,0.55);
   pointer-events: auto;
+  /* Anchor at top-left of placed coords (no upward translate that clips off-screen). */
+  transform: none;
 }
 .info-close {
   float: right;
@@ -236,16 +240,49 @@ body {
   color: var(--faint);
   cursor: pointer;
   font-size: 10px;
-  margin-left: 6px;
+  margin: -2px 0 4px 8px;
+  line-height: 1;
 }
 
 /* ── Indicator note ───────────────────────────────────────────────────────── */
+.indicator-intro {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
 .indicator-note {
   font-size: 0.78rem;
   color: var(--faint);
   line-height: 1.5;
   border-left: 2px solid var(--border);
   padding-left: 0.6rem;
+  margin: 0;
+}
+.indicator-detail {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.65rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.indicator-detail h4 {
+  margin: 0;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ice);
+}
+.indicator-detail p {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.indicator-detail h4 + p + h4 {
+  margin-top: 0.25rem;
 }
 
 /* ── Param section ───────────────────────────────────────────────────────── */

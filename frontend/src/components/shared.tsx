@@ -3,49 +3,84 @@ import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, CartesianGri
 import type { UploadResult } from '../api/client';
 
 // ── Tooltip ────────────────────────────────────────────────────────────────────
+const BUBBLE_WIDTH = 300;
+const BUBBLE_MAX_HEIGHT = 320;
+
+function placeInfoBubble(btn: DOMRect): { top: number; left: number } {
+  const pad = 10;
+  const vw = window.innerWidth;
+  const vh = window.innerHeight;
+  const width = Math.min(BUBBLE_WIDTH, vw - pad * 2);
+
+  // Prefer opening below-right of the trigger so top-of-panel tooltips stay visible.
+  let top = btn.bottom + 8;
+  let left = btn.left;
+
+  if (top + Math.min(BUBBLE_MAX_HEIGHT, 180) > vh - pad) {
+    top = Math.max(pad, btn.top - Math.min(BUBBLE_MAX_HEIGHT, 220) - 8);
+  }
+
+  left = Math.min(Math.max(pad, left), vw - width - pad);
+  top = Math.min(Math.max(pad, top), vh - pad - 48);
+  return { top, left };
+}
+
 export function InfoTooltip({ text }: { text: string }) {
   const [pos, setPos] = useState<{ top: number; left: number } | null>(null);
   const btnRef = useRef<HTMLButtonElement>(null);
+  const bubbleRef = useRef<HTMLSpanElement>(null);
 
   const toggle = () => {
     if (pos) {
       setPos(null);
-    } else if (btnRef.current) {
-      const r = btnRef.current.getBoundingClientRect();
-      setPos({
-        top:  r.top - 8,           // above the button
-        left: r.left + r.width / 2,
-      });
+      return;
     }
+    if (!btnRef.current) return;
+    setPos(placeInfoBubble(btnRef.current.getBoundingClientRect()));
   };
 
-  // Close on scroll or resize
+  // Close on outside click, scroll, or resize
   useEffect(() => {
     if (!pos) return;
     const close = () => setPos(null);
+    const onPointer = (e: MouseEvent) => {
+      const t = e.target as Node;
+      if (btnRef.current?.contains(t) || bubbleRef.current?.contains(t)) return;
+      close();
+    };
     window.addEventListener('scroll', close, true);
     window.addEventListener('resize', close);
+    document.addEventListener('mousedown', onPointer);
     return () => {
       window.removeEventListener('scroll', close, true);
       window.removeEventListener('resize', close);
+      document.removeEventListener('mousedown', onPointer);
     };
   }, [pos]);
 
   return (
     <span className="info-tooltip-wrap">
-      <button ref={btnRef} className="info-btn" onClick={toggle} aria-label="Information">?</button>
+      <button
+        ref={btnRef}
+        type="button"
+        className="info-btn"
+        onClick={toggle}
+        aria-expanded={!!pos}
+        aria-label="Information"
+      >
+        ?
+      </button>
       {pos && (
         <span
+          ref={bubbleRef}
           className="info-bubble"
-          style={{
-            top:       pos.top,
-            left:      pos.left,
-            transform: 'translate(-50%, -100%)',
-          }}
+          style={{ top: pos.top, left: pos.left }}
           role="tooltip"
         >
+          <button type="button" className="info-close" onClick={() => setPos(null)} aria-label="Close">
+            ✕
+          </button>
           {text}
-          <button className="info-close" onClick={() => setPos(null)}>✕</button>
         </span>
       )}
     </span>
@@ -69,6 +104,29 @@ export function AnalyticsSection({ title, children }: { title: string; children:
     <div className="analytics-section">
       <h3 className="analytics-section-title">{title}</h3>
       {children}
+    </div>
+  );
+}
+
+/** Visible analysis overview in the left control panel. */
+export function IndicatorIntro({
+  summary,
+  analysis,
+  outputs,
+}: {
+  summary: string;
+  analysis: string;
+  outputs: string;
+}) {
+  return (
+    <div className="indicator-intro">
+      <p className="indicator-note">{summary}</p>
+      <div className="indicator-detail">
+        <h4>What this analysis does</h4>
+        <p>{analysis}</p>
+        <h4>What the outputs mean</h4>
+        <p>{outputs}</p>
+      </div>
     </div>
   );
 }
