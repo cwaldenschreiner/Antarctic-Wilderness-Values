@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { analyzeWildness, fetchPrecomputed, uploadFile } from '../api/client';
-import type { WildnessResult, UploadResult, PrecomputedResponse } from '../api/client';
+import type { WildnessResult, UploadResult, PrecomputedResponse, IdentifyGridPayload } from '../api/client';
 import { MapView } from '../components/map/MapView';
-import type { RasterLayer } from '../components/map/MapView';
+import type { RasterLayer, OverlayLayer, IdentifyGrid } from '../components/map/MapView';
 import {
   AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
   IndicatorIntro, UploadPanel, LayerLegend, HistogramChart,
@@ -26,6 +26,10 @@ export function WildnessPage() {
   const [opacity,      setOpacity]      = useState(0.8);
   const [showWild,     setShowWild]     = useState(true);
   const [showViewshed, setShowViewshed] = useState(false);
+  const [showFacilities, setShowFacilities] = useState(false);
+  const [showVisitors, setShowVisitors] = useState(false);
+  const [showPlaces,   setShowPlaces]   = useState(true);
+  const [grids, setGrids] = useState<Record<string, IdentifyGridPayload>>({});
 
   const [facSight, setFacSight] = useState(100);
   const [visSight, setVisSight] = useState(50);
@@ -38,6 +42,10 @@ export function WildnessPage() {
           setResult({
             wildness_png:        pre.rasters.wildness_index,
             viewshed_png:        pre.rasters.cumulative_viewshed || '',
+            identify_grids: {
+              wild: pre.grids?.wildness_index,
+              viewshed: pre.grids?.cumulative_viewshed,
+            },
             raster_coords:       pre.raster_coords,
             wild_pct:            pre.stats.wildness?.wild_pct || 0,
             visible_impact_pct:  pre.stats.wildness?.visible_impact_pct || 0,
@@ -49,6 +57,7 @@ export function WildnessPage() {
             n_visitor_sites:     331,
             params:              {},
           } as WildnessResult);
+          if (pre.grids) setGrids(pre.grids);
         }
       })
       .catch(() => {})
@@ -65,6 +74,12 @@ export function WildnessPage() {
         merge_uploaded:    mergeUpload,
       });
       setResult(data);
+      if (data.identify_grids) {
+        setGrids({
+          wildness_index: data.identify_grids.wild,
+          cumulative_viewshed: data.identify_grids.viewshed,
+        });
+      }
     } catch (e: unknown) {
       setError(String(e));
     } finally {
@@ -85,6 +100,19 @@ export function WildnessPage() {
   const rasters: RasterLayer[] = [
     ...(result?.wildness_png  ? [{ id: 'wild',     png_base64: result.wildness_png, coords, opacity,          visible: showWild     }] : []),
     ...(result?.viewshed_png  ? [{ id: 'viewshed', png_base64: result.viewshed_png, coords, opacity: viewshedOpacity, visible: showViewshed }] : []),
+  ];
+  const overlayLayers: OverlayLayer[] = [
+    { id: 'facilities', visible: showFacilities },
+    { id: 'visitor_sites', visible: showVisitors },
+    { id: 'place_names', visible: showPlaces },
+  ];
+  const identifyGrids: IdentifyGrid[] = [
+    ...(grids.wildness_index && showWild
+      ? [{ id: 'wild', label: 'Wildness score', visible: true, grid: grids.wildness_index }]
+      : []),
+    ...(grids.cumulative_viewshed && showViewshed
+      ? [{ id: 'viewshed', label: 'Viewshed / impact', visible: true, grid: grids.cumulative_viewshed }]
+      : []),
   ];
 
   return (
@@ -122,7 +150,7 @@ export function WildnessPage() {
       }
       map={
         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-          <MapView rasters={rasters} />
+          <MapView rasters={rasters} overlays={overlayLayers} identifyGrids={identifyGrids} />
           {loading && <LoadingOverlay />}
           {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         </div>
@@ -149,6 +177,27 @@ export function WildnessPage() {
               kind: 'solid',
               color: '#b71c1c',
             },
+          },
+          {
+            id: 'facilities',
+            label: 'COMNAP facilities',
+            visible: showFacilities,
+            onToggle: () => setShowFacilities(v => !v),
+            style: { kind: 'solid', color: '#f59e0b' },
+          },
+          {
+            id: 'visitors',
+            label: 'Visitor sites',
+            visible: showVisitors,
+            onToggle: () => setShowVisitors(v => !v),
+            style: { kind: 'solid', color: '#38bdf8' },
+          },
+          {
+            id: 'places',
+            label: 'Place names',
+            visible: showPlaces,
+            onToggle: () => setShowPlaces(v => !v),
+            style: { kind: 'solid', color: '#e2e8f0' },
           },
         ]} />
       }

@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import { analyzePristineness, fetchPrecomputed, uploadFile } from '../api/client';
-import type { PristinenessResult, UploadResult, PrecomputedResponse } from '../api/client';
+import type { PristinenessResult, UploadResult, PrecomputedResponse, IdentifyGridPayload } from '../api/client';
 import { MapView } from '../components/map/MapView';
-import type { RasterLayer } from '../components/map/MapView';
+import type { RasterLayer, OverlayLayer, IdentifyGrid } from '../components/map/MapView';
 import {
   AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
   IndicatorIntro, UploadPanel, LayerLegend, HistogramChart,
@@ -27,6 +27,10 @@ export function PristinenessPage() {
   const [opacity,       setOpacity]      = useState(0.8);
   const [showPrist,     setShowPrist]    = useState(true);
   const [showInviolate, setShowInv]      = useState(false);
+  const [showVisitors,  setShowVisitors] = useState(false);
+  const [showInviolatePoly, setShowInviolatePoly] = useState(false);
+  const [showPlaces,    setShowPlaces]   = useState(true);
+  const [grids, setGrids] = useState<Record<string, IdentifyGridPayload>>({});
 
   const [baseDecay, setBaseDecay] = useState(50);
   const [maxDecay,  setMaxDecay]  = useState(250);
@@ -39,6 +43,10 @@ export function PristinenessPage() {
           setResult({
             pristineness_png:    pre.rasters.pristineness_index,
             inviolate_png:       pre.rasters.inviolate_mask || '',
+            identify_grids: {
+              prist: pre.grids?.pristineness_index,
+              inviolate: pre.grids?.inviolate_mask,
+            },
             raster_coords:       pre.raster_coords,
             inviolate_pct:       pre.stats.pristineness?.inviolate_pct || 0,
             inviolate_area_km2:  pre.stats.pristineness?.inviolate_area_km2 || 0,
@@ -52,6 +60,7 @@ export function PristinenessPage() {
             n_inviolate_polygons: 1733,
             params:              {},
           } as PristinenessResult);
+          if (pre.grids) setGrids(pre.grids);
         }
       })
       .catch(() => {})
@@ -68,6 +77,12 @@ export function PristinenessPage() {
         merge_uploaded:      mergeUpload,
       });
       setResult(data);
+      if (data.identify_grids) {
+        setGrids({
+          pristineness_index: data.identify_grids.prist,
+          inviolate_mask: data.identify_grids.inviolate,
+        });
+      }
     } catch (e: unknown) {
       setError(String(e));
     } finally {
@@ -88,6 +103,19 @@ export function PristinenessPage() {
   const rasters: RasterLayer[] = [
     ...(result?.pristineness_png ? [{ id: 'prist',     png_base64: result.pristineness_png, coords, opacity,                  visible: showPrist    }] : []),
     ...(result?.inviolate_png    ? [{ id: 'inviolate', png_base64: result.inviolate_png,    coords, opacity: inviolateOpacity, visible: showInviolate }] : []),
+  ];
+  const overlayLayers: OverlayLayer[] = [
+    { id: 'inviolate_wilderness', visible: showInviolatePoly },
+    { id: 'visitor_sites', visible: showVisitors },
+    { id: 'place_names', visible: showPlaces },
+  ];
+  const identifyGrids: IdentifyGrid[] = [
+    ...(grids.pristineness_index && showPrist
+      ? [{ id: 'prist', label: 'Pristineness score', visible: true, grid: grids.pristineness_index }]
+      : []),
+    ...(grids.inviolate_mask && showInviolate
+      ? [{ id: 'inviolate', label: 'Inviolate mask', visible: true, grid: grids.inviolate_mask }]
+      : []),
   ];
 
   return (
@@ -130,7 +158,7 @@ export function PristinenessPage() {
       }
       map={
         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-          <MapView rasters={rasters} />
+          <MapView rasters={rasters} overlays={overlayLayers} identifyGrids={identifyGrids} />
           {loading && <LoadingOverlay />}
           {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         </div>
@@ -157,6 +185,27 @@ export function PristinenessPage() {
               kind: 'solid',
               color: '#1b5e20',
             },
+          },
+          {
+            id: 'inviolate-poly',
+            label: 'Inviolate polygons (input)',
+            visible: showInviolatePoly,
+            onToggle: () => setShowInviolatePoly(v => !v),
+            style: { kind: 'solid', color: '#34d399' },
+          },
+          {
+            id: 'visitors',
+            label: 'Visitor sites',
+            visible: showVisitors,
+            onToggle: () => setShowVisitors(v => !v),
+            style: { kind: 'solid', color: '#38bdf8' },
+          },
+          {
+            id: 'places',
+            label: 'Place names',
+            visible: showPlaces,
+            onToggle: () => setShowPlaces(v => !v),
+            style: { kind: 'solid', color: '#e2e8f0' },
           },
         ]} />
       }

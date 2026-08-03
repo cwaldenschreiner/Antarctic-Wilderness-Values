@@ -46,8 +46,16 @@ export interface CatalogResponse {
 
 export interface RasterCoords { coordinates: [[number,number],[number,number],[number,number],[number,number]] }
 
+export interface IdentifyGridPayload {
+  shape: [number, number];
+  extent: [number, number, number, number];
+  nodata: number;
+  data_b64: string;
+}
+
 export interface RemotenessResult {
   score_png: string; rank_png: string; raster_coords: number[][];
+  identify_grids?: Record<string, IdentifyGridPayload>;
   rank_pcts: Record<string, number>;
   mean_score: number; high_remoteness_pct: number;
   high_remoteness_km2: number; total_continent_km2: number;
@@ -58,6 +66,7 @@ export interface RemotenessResult {
 
 export interface WildnessResult {
   wildness_png: string; viewshed_png: string; raster_coords: number[][];
+  identify_grids?: Record<string, IdentifyGridPayload>;
   wild_pct: number; visible_impact_pct: number;
   wild_area_km2: number; impacted_area_km2: number; total_continent_km2: number;
   histogram: { counts: number[]; edges: number[] };
@@ -67,6 +76,7 @@ export interface WildnessResult {
 
 export interface PristinenessResult {
   pristineness_png: string; inviolate_png: string; raster_coords: number[][];
+  identify_grids?: Record<string, IdentifyGridPayload>;
   inviolate_pct: number; inviolate_area_km2: number; total_continent_km2: number;
   n_patches: number; largest_patch_km2: number; mean_patch_km2: number;
   mean_score: number;
@@ -77,6 +87,7 @@ export interface PristinenessResult {
 
 export interface PrecomputedResponse {
   rasters: Record<string, string>;
+  grids?: Record<string, IdentifyGridPayload>;
   stats: {
     remoteness?: { rank_pcts: Record<string,number>; mean_score: number; high_remoteness_pct: number; high_remoteness_km2: number; total_continent_km2: number };
     wildness?:   { wild_pct: number; visible_impact_pct: number; wild_area_km2: number; impacted_area_km2: number };

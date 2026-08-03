@@ -32,6 +32,18 @@ def main() -> None:
     _write_png("pristineness_index", prist["pristineness_png"])
     _write_png("inviolate_mask", prist["inviolate_png"])
 
+    grids = {
+        "remoteness_score": rem["identify_grids"]["score"],
+        "remoteness_rank": rem["identify_grids"]["rank"],
+        "wildness_index": wild["identify_grids"]["wild"],
+        "cumulative_viewshed": wild["identify_grids"]["viewshed"],
+        "pristineness_index": prist["identify_grids"]["prist"],
+        "inviolate_mask": prist["identify_grids"]["inviolate"],
+    }
+    grids_path = DATA_DIR / "precomputed_grids.json"
+    grids_path.write_text(json.dumps(grids) + "\n")
+    print(f"wrote {grids_path.name} ({grids_path.stat().st_size:,} bytes)")
+
     stats = {
         "remoteness": {
             "rank_pcts": rem["rank_pcts"],
