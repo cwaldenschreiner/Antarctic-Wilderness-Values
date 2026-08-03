@@ -51,7 +51,7 @@ export function WildnessPage() {
             visible_impact_pct:  pre.stats.wildness?.visible_impact_pct || 0,
             wild_area_km2:       pre.stats.wildness?.wild_area_km2 || 0,
             impacted_area_km2:   pre.stats.wildness?.impacted_area_km2 || 0,
-            total_continent_km2: 24600000,
+            total_continent_km2: pre.stats.wildness?.total_continent_km2 || 0,
             histogram:           { counts: [], edges: [] },
             n_facilities:        81,
             n_visitor_sites:     331,

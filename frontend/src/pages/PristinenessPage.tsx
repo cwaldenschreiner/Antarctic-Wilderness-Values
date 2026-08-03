@@ -50,7 +50,7 @@ export function PristinenessPage() {
             raster_coords:       pre.raster_coords,
             inviolate_pct:       pre.stats.pristineness?.inviolate_pct || 0,
             inviolate_area_km2:  pre.stats.pristineness?.inviolate_area_km2 || 0,
-            total_continent_km2: 24600000,
+            total_continent_km2: pre.stats.pristineness?.total_continent_km2 || 0,
             n_patches:           pre.stats.pristineness?.n_patches || 0,
             largest_patch_km2:   pre.stats.pristineness?.largest_patch_km2 || 0,
             mean_patch_km2:      0,

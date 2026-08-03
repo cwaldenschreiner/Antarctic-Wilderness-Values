@@ -45,7 +45,8 @@ PROJ_3031.setWorldExtent([-180, -90, 180, -60]);
 
 // Outer edges of 50 km cells centred on ±3 000 000 m (not centre-to-centre).
 const RASTER_EXTENT: Extent = [-3025000, -3025000, 3025000, 3025000];
-const ANTARCTIC_EXTENT: Extent = [-2800000, -2800000, 2800000, 2800000];
+// Default view includes South Shetlands / Elephant Island (~3,200 km from pole).
+const ANTARCTIC_EXTENT: Extent = [-3200000, -3200000, 3200000, 3200000];
 const API_BASE = (import.meta.env.VITE_API_URL as string) || '/api';
 const ROTATE_STEP = Math.PI / 6;
 

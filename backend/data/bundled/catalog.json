@@ -97,7 +97,7 @@
         -90
       ]
     ],
-    "note": "Rasters cover Antarctica south of 60\u00b0S in EPSG:3031, displayed as image overlays within these WGS84 bounds."
+    "note": "Rasters cover the Antarctic domain in EPSG:3031 (2,800 km disk plus near-land cells to 3,300 km, including South Shetland and Elephant Islands), displayed as image overlays within these WGS84 bounds."
   },
   "analysis_defaults": {
     "remoteness": {

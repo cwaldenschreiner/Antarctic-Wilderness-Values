@@ -90,8 +90,8 @@ export interface PrecomputedResponse {
   grids?: Record<string, IdentifyGridPayload>;
   stats: {
     remoteness?: { rank_pcts: Record<string,number>; mean_score: number; high_remoteness_pct: number; high_remoteness_km2: number; total_continent_km2: number };
-    wildness?:   { wild_pct: number; visible_impact_pct: number; wild_area_km2: number; impacted_area_km2: number };
-    pristineness?: { inviolate_pct: number; inviolate_area_km2: number; n_patches: number; largest_patch_km2: number };
+    wildness?:   { wild_pct: number; visible_impact_pct: number; wild_area_km2: number; impacted_area_km2: number; total_continent_km2: number };
+    pristineness?: { inviolate_pct: number; inviolate_area_km2: number; n_patches: number; largest_patch_km2: number; total_continent_km2: number };
     grid?: { resolution_km: number; n_continent_cells: number };
   };
   raster_coords: number[][];
