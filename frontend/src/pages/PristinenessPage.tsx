@@ -4,7 +4,7 @@ import type { PristinenessResult, UploadResult, PrecomputedResponse } from '../a
 import { MapView } from '../components/map/MapView';
 import type { RasterLayer } from '../components/map/MapView';
 import {
-  AnalysisLayout, SectionHeader, ParamSlider, StatCard,
+  AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
   UploadPanel, LayerLegend, HistogramChart,
   LoadingOverlay, ErrorBanner,
 } from '../components/shared';
@@ -160,33 +160,47 @@ export function PristinenessPage() {
       }
       charts={
         <>
-          <div className="stat-cards">
-            <StatCard
-              value={result ? `${result.inviolate_pct}%` : '—'}
-              label="Inviolate area"
-              sub="No recorded visitation 1819–2018"
-            />
-            <StatCard
-              value={result ? `${(result.inviolate_area_km2 / 1e6).toFixed(1)} M km²` : '—'}
-              label="Inviolate extent"
-            />
-            <StatCard
-              value={result ? `${result.n_patches}` : '—'}
-              label="Inviolate patches"
-              sub="Contiguous blocks"
-            />
-            <StatCard
-              value={result ? `${(result.largest_patch_km2 / 1e3).toFixed(0)}k km²` : '—'}
-              label="Largest patch"
-            />
-          </div>
+          <AnalyticsSection title="Summary metrics">
+            <div className="stat-cards">
+              <StatCard
+                value={result ? `${result.inviolate_pct}%` : '—'}
+                label="Inviolate share of continent"
+                sub="No recorded visitation 1819–2018"
+              />
+              <StatCard
+                value={result ? `${(result.inviolate_area_km2 / 1e6).toFixed(1)} M km²` : '—'}
+                label="Inviolate extent"
+                sub="Absolute area of inviolate cells"
+              />
+              <StatCard
+                value={result ? `${result.n_patches}` : '—'}
+                label="Inviolate patches"
+                sub="Contiguous inviolate blocks"
+              />
+              <StatCard
+                value={result ? `${(result.largest_patch_km2 / 1e3).toFixed(0)}k km²` : '—'}
+                label="Largest inviolate patch"
+                sub="Biggest contiguous block"
+              />
+            </div>
+          </AnalyticsSection>
           {result?.histogram?.counts.length ? (
-            <HistogramChart histogram={result.histogram} title="Pristineness Score Distribution" color="#00897b" />
+            <AnalyticsSection title="Score distribution">
+              <HistogramChart
+                histogram={result.histogram}
+                title="Pristineness score histogram"
+                color="#00897b"
+                xLabel="Pristineness score (0–100)"
+                yLabel="Grid cells"
+              />
+            </AnalyticsSection>
           ) : null}
-          <div className="citation-block">
-            <p>Inviolate baseline: Leihy, R.I. et al. (2020). Antarctica's wilderness fails to capture continent's biodiversity. <em>Nature</em>, 583, 567–571.</p>
-            <p>Visitor data: ATS Land-based Visited Sites (2019–2024). Compiled by Walden-Schreiner (2025) for ANT-MICI WP3.</p>
-          </div>
+          <AnalyticsSection title="Data sources">
+            <div className="citation-block">
+              <p>Inviolate baseline: Leihy, R.I. et al. (2020). Antarctica's wilderness fails to capture continent's biodiversity. <em>Nature</em>, 583, 567–571.</p>
+              <p>Visitor data: ATS Land-based Visited Sites (2019–2024). Compiled by Walden-Schreiner (2025) for ANT-MICI WP3.</p>
+            </div>
+          </AnalyticsSection>
         </>
       }
     />

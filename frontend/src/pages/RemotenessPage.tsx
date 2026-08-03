@@ -4,7 +4,7 @@ import type { RemotenessResult, UploadResult, PrecomputedResponse } from '../api
 import { MapView } from '../components/map/MapView';
 import type { RasterLayer } from '../components/map/MapView';
 import {
-  AnalysisLayout, SectionHeader, ParamSlider, StatCard,
+  AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
   UploadPanel, LayerLegend, HistogramChart, RankChart,
   LoadingOverlay, ErrorBanner,
 } from '../components/shared';
@@ -165,19 +165,41 @@ export function RemotenessPage() {
       }
       charts={
         <>
-          <div className="stat-cards">
-            <StatCard value={result ? `${result.high_remoteness_pct}%` : '—'}
-              label="High remoteness" sub="> 50 km from any human activity" />
-            <StatCard value={result ? `${(result.high_remoteness_km2 / 1e6).toFixed(1)} M km²` : '—'}
-              label="High remoteness area" />
-            <StatCard value={result ? `${result.mean_score.toFixed(0)}` : '—'}
-              label="Mean remoteness score" sub="0–100" />
-            <StatCard value={result ? `${result.n_facilities}` : '81'}
-              label="Facilities" sub="COMNAP v3.5.0 (2024)" />
-          </div>
-          {result?.rank_pcts && <RankChart pcts={result.rank_pcts} />}
+          <AnalyticsSection title="Summary metrics">
+            <div className="stat-cards">
+              <StatCard value={result ? `${result.high_remoteness_pct}%` : '—'}
+                label="High remoteness share"
+                sub="> 50 km from any human activity" />
+              <StatCard value={result ? `${(result.high_remoteness_km2 / 1e6).toFixed(1)} M km²` : '—'}
+                label="High remoteness area"
+                sub="Continent cells > 50 km" />
+              <StatCard value={result ? `${result.mean_score.toFixed(0)}` : '—'}
+                label="Mean remoteness score"
+                sub="Scale 0–100 (higher = more remote)" />
+              <StatCard value={result ? `${result.n_facilities}` : '81'}
+                label="Facilities counted"
+                sub="COMNAP v3.5.0 (2024)" />
+            </div>
+          </AnalyticsSection>
+          {result?.rank_pcts && Object.keys(result.rank_pcts).length > 0 && (
+            <AnalyticsSection title="Rank distribution">
+              <RankChart
+                pcts={result.rank_pcts}
+                title="Share of continent by remoteness rank"
+                xLabel="% of continent"
+              />
+            </AnalyticsSection>
+          )}
           {result?.histogram?.counts.length ? (
-            <HistogramChart histogram={result.histogram} title="Remoteness Score Distribution" color="#43a047" />
+            <AnalyticsSection title="Score distribution">
+              <HistogramChart
+                histogram={result.histogram}
+                title="Remoteness score histogram"
+                color="#43a047"
+                xLabel="Remoteness score (0–100)"
+                yLabel="Grid cells"
+              />
+            </AnalyticsSection>
           ) : null}
         </>
       }

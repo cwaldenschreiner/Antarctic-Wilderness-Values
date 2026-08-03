@@ -4,7 +4,7 @@ import type { WildnessResult, UploadResult, PrecomputedResponse } from '../api/c
 import { MapView } from '../components/map/MapView';
 import type { RasterLayer } from '../components/map/MapView';
 import {
-  AnalysisLayout, SectionHeader, ParamSlider, StatCard,
+  AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
   UploadPanel, LayerLegend, HistogramChart,
   LoadingOverlay, ErrorBanner,
 } from '../components/shared';
@@ -151,18 +151,32 @@ export function WildnessPage() {
       }
       charts={
         <>
-          <div className="stat-cards">
-            <StatCard value={result ? `${result.wild_pct}%` : '—'}
-              label="Wild (out of sight/sound)" />
-            <StatCard value={result ? `${result.visible_impact_pct}%` : '—'}
-              label="Within impact range" />
-            <StatCard value={result ? `${(result.wild_area_km2 / 1e6).toFixed(1)} M km²` : '—'}
-              label="Wild area" />
-            <StatCard value={result ? `${result.n_facilities}` : '81'}
-              label="Facilities" sub="COMNAP v3.5.0 (2024)" />
-          </div>
+          <AnalyticsSection title="Summary metrics">
+            <div className="stat-cards">
+              <StatCard value={result ? `${result.wild_pct}%` : '—'}
+                label="Wild share of continent"
+                sub="Out of sight and sound of human activity" />
+              <StatCard value={result ? `${result.visible_impact_pct}%` : '—'}
+                label="Within impact range"
+                sub="% of continent inside sight/sound thresholds" />
+              <StatCard value={result ? `${(result.wild_area_km2 / 1e6).toFixed(1)} M km²` : '—'}
+                label="Wild area"
+                sub="Absolute extent classified as wild" />
+              <StatCard value={result ? `${result.n_facilities}` : '81'}
+                label="Facilities counted"
+                sub="COMNAP v3.5.0 (2024)" />
+            </div>
+          </AnalyticsSection>
           {result?.histogram?.counts.length ? (
-            <HistogramChart histogram={result.histogram} title="Wildness Score Distribution" color="#1b5e20" />
+            <AnalyticsSection title="Score distribution">
+              <HistogramChart
+                histogram={result.histogram}
+                title="Wildness score histogram"
+                color="#1b5e20"
+                xLabel="Wildness score (0 = impacted, 100 = wild)"
+                yLabel="Grid cells"
+              />
+            </AnalyticsSection>
           ) : null}
         </>
       }
