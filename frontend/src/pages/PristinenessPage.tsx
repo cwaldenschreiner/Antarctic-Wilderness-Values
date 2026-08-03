@@ -135,8 +135,27 @@ export function PristinenessPage() {
       }
       legend={
         <LayerLegend items={[
-          { id: 'prist',    label: 'Pristineness Index', color: '#00897b', visible: showPrist,    onToggle: () => setShowPrist(v => !v) },
-          { id: 'inviolate', label: 'Inviolate Areas',   color: '#1b5e20', visible: showInviolate, onToggle: () => setShowInv(v => !v)   },
+          {
+            id: 'prist',
+            label: 'Pristineness Index',
+            visible: showPrist,
+            onToggle: () => setShowPrist(v => !v),
+            style: {
+              kind: 'gradient',
+              colors: ['#37474f', '#0277bd', '#00897b', '#2e7d32', '#f9fbe7'],
+              labels: ['0', '50', '100'],
+            },
+          },
+          {
+            id: 'inviolate',
+            label: 'Inviolate Areas',
+            visible: showInviolate,
+            onToggle: () => setShowInv(v => !v),
+            style: {
+              kind: 'solid',
+              color: '#1b5e20',
+            },
+          },
         ]} />
       }
       charts={

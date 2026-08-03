@@ -135,8 +135,32 @@ export function RemotenessPage() {
       }
       legend={
         <LayerLegend items={[
-          { id: 'score', label: 'Remoteness Score', color: '#43a047', visible: showScore, onToggle: () => setShowScore(v => !v) },
-          { id: 'rank',  label: 'Remoteness Rank',  color: '#fbc02d', visible: showRank,  onToggle: () => setShowRank(v => !v)  },
+          {
+            id: 'score',
+            label: 'Remoteness Score',
+            visible: showScore,
+            onToggle: () => setShowScore(v => !v),
+            style: {
+              kind: 'gradient',
+              colors: ['#1a0533', '#1565c0', '#0097a7', '#43a047', '#f9fbe7'],
+              labels: ['0', '50', '100'],
+            },
+          },
+          {
+            id: 'rank',
+            label: 'Remoteness Rank',
+            visible: showRank,
+            onToggle: () => setShowRank(v => !v),
+            style: {
+              kind: 'classes',
+              classes: [
+                { color: '#d32f2f', label: '<5 km (Low)' },
+                { color: '#f57c00', label: '5–20 km' },
+                { color: '#fbc02d', label: '20–50 km' },
+                { color: '#388e3c', label: '>50 km (High)' },
+              ],
+            },
+          },
         ]} />
       }
       charts={

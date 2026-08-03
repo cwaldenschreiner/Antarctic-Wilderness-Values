@@ -126,8 +126,27 @@ export function WildnessPage() {
       }
       legend={
         <LayerLegend items={[
-          { id: 'wild',     label: 'Wildness Index',       color: '#1b5e20', visible: showWild,     onToggle: () => setShowWild(v => !v)     },
-          { id: 'viewshed', label: 'Impacted (viewshed)',  color: '#b71c1c', visible: showViewshed, onToggle: () => setShowViewshed(v => !v) },
+          {
+            id: 'wild',
+            label: 'Wildness Index',
+            visible: showWild,
+            onToggle: () => setShowWild(v => !v),
+            style: {
+              kind: 'gradient',
+              colors: ['#b71c1c', '#ef9a9a', '#fff9c4', '#66bb6a', '#1b5e20'],
+              labels: ['0 impacted', '100 wild'],
+            },
+          },
+          {
+            id: 'viewshed',
+            label: 'Impacted (viewshed)',
+            visible: showViewshed,
+            onToggle: () => setShowViewshed(v => !v),
+            style: {
+              kind: 'solid',
+              color: '#b71c1c',
+            },
+          },
         ]} />
       }
       charts={

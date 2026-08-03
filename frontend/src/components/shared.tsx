@@ -155,21 +155,96 @@ export function UploadPanel({ uploadResult, onUpload, onMergeChange, merge }:
 }
 
 // ── Layer legend ───────────────────────────────────────────────────────────────
-export function LayerLegend({ items }: {
-  items: { id: string; label: string; color: string; visible: boolean; onToggle: () => void }[]
-}) {
+
+export type LegendGradient = {
+  kind: 'gradient';
+  colors: string[];
+  /** Labels along the ramp, typically [min, …, max]. */
+  labels: string[];
+};
+
+export type LegendClasses = {
+  kind: 'classes';
+  classes: { color: string; label: string }[];
+};
+
+export type LegendSolid = {
+  kind: 'solid';
+  color: string;
+};
+
+export type LegendStyle = LegendGradient | LegendClasses | LegendSolid;
+
+export type LegendItem = {
+  id: string;
+  label: string;
+  visible: boolean;
+  onToggle: () => void;
+  style: LegendStyle;
+};
+
+function LegendRamp({ colors, labels }: { colors: string[]; labels: string[] }) {
+  return (
+    <div className="legend-ramp" aria-hidden>
+      <div
+        className="legend-ramp-bar"
+        style={{ background: `linear-gradient(90deg, ${colors.join(', ')})` }}
+      />
+      <div
+        className="legend-ramp-labels"
+        style={{ gridTemplateColumns: `repeat(${labels.length}, minmax(0, 1fr))` }}
+      >
+        {labels.map((lab, i) => (
+          <span
+            key={`${lab}-${i}`}
+            className={
+              i === 0 ? 'is-start' : i === labels.length - 1 ? 'is-end' : 'is-mid'
+            }
+          >
+            {lab}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function LegendClassList({ classes }: { classes: { color: string; label: string }[] }) {
+  return (
+    <div className="legend-classes" aria-hidden>
+      {classes.map(c => (
+        <div key={c.label} className="legend-class-row">
+          <span className="swatch" style={{ background: c.color }} />
+          <span className="legend-class-label">{c.label}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export function LayerLegend({ items }: { items: LegendItem[] }) {
   return (
     <div className="layer-legend">
       <h4>Layers</h4>
-      <ul>{items.map(it => (
-        <li key={it.id}>
-          <label>
-            <input type="checkbox" checked={it.visible} onChange={it.onToggle} />
-            <span className="swatch" style={{ background: it.color }} />
-            {it.label}
-          </label>
-        </li>
-      ))}</ul>
+      <ul>
+        {items.map(it => (
+          <li key={it.id}>
+            <label className="legend-toggle">
+              <input type="checkbox" checked={it.visible} onChange={it.onToggle} />
+              {it.style.kind === 'solid' && (
+                <span className="swatch" style={{ background: it.style.color }} />
+              )}
+              <span className="legend-item-title">{it.label}</span>
+            </label>
+            {it.style.kind === 'gradient' && (
+              <LegendRamp colors={it.style.colors} labels={it.style.labels} />
+            )}
+            {it.style.kind === 'classes' && (
+              <LegendClassList classes={it.style.classes} />
+            )}
+          </li>
+        ))}
+      </ul>
     </div>
   );
 }
