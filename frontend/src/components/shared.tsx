@@ -63,9 +63,30 @@ export function StatCard({ value, label, sub }: { value: string | number; label:
   );
 }
 
+/** Labeled group for the analytics strip under the map. */
+export function AnalyticsSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div className="analytics-section">
+      <h3 className="analytics-section-title">{title}</h3>
+      {children}
+    </div>
+  );
+}
+
 // ── Histogram ──────────────────────────────────────────────────────────────────
-export function HistogramChart({ histogram, title, color = '#3d8bfd' }:
-  { histogram?: { counts: number[]; edges: number[] }; title: string; color?: string }) {
+export function HistogramChart({
+  histogram,
+  title,
+  color = '#3d8bfd',
+  xLabel = 'Score (0–100)',
+  yLabel = 'Grid cells',
+}: {
+  histogram?: { counts: number[]; edges: number[] };
+  title: string;
+  color?: string;
+  xLabel?: string;
+  yLabel?: string;
+}) {
   if (!histogram) return null;
   const data = histogram.counts.map((count, i) => ({
     bin: `${Math.round(histogram.edges[i])}`,
@@ -74,13 +95,26 @@ export function HistogramChart({ histogram, title, color = '#3d8bfd' }:
   return (
     <div className="chart-block">
       <h4>{title}</h4>
-      <ResponsiveContainer width="100%" height={150}>
-        <BarChart data={data} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} margin={{ top: 8, right: 12, left: 28, bottom: 28 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#2d4a6a" />
-          <XAxis dataKey="bin" tick={{ fill: '#94a3b8', fontSize: 9 }} interval="preserveStartEnd" />
-          <YAxis tick={{ fill: '#94a3b8', fontSize: 9 }} />
-          <Tooltip contentStyle={{ background: '#132337', border: '1px solid #2d4a6a', fontSize: 12 }} />
-          <Bar dataKey="count" fill={color} radius={[2, 2, 0, 0]} />
+          <XAxis
+            dataKey="bin"
+            tick={{ fill: '#94a3b8', fontSize: 9 }}
+            interval="preserveStartEnd"
+            label={{ value: xLabel, position: 'insideBottom', offset: -18, fill: '#94a3b8', fontSize: 10 }}
+          />
+          <YAxis
+            tick={{ fill: '#94a3b8', fontSize: 9 }}
+            width={48}
+            label={{ value: yLabel, angle: -90, position: 'insideLeft', offset: 4, fill: '#94a3b8', fontSize: 10 }}
+          />
+          <Tooltip
+            contentStyle={{ background: '#132337', border: '1px solid #2d4a6a', fontSize: 12 }}
+            formatter={(v: unknown) => [v as number, yLabel]}
+            labelFormatter={(lab) => `${xLabel.replace(/\s*\(.*\)$/, '')}: ${lab}`}
+          />
+          <Bar dataKey="count" fill={color} radius={[2, 2, 0, 0]} name={yLabel} />
         </BarChart>
       </ResponsiveContainer>
     </div>
@@ -89,19 +123,41 @@ export function HistogramChart({ histogram, title, color = '#3d8bfd' }:
 
 // ── Rank bar chart ─────────────────────────────────────────────────────────────
 const RANK_COLORS = ['#ef5350', '#ff9800', '#fdd835', '#66bb6a'];
-export function RankChart({ pcts }: { pcts: Record<string, number> }) {
+export function RankChart({
+  pcts,
+  title = 'Remoteness Rank Distribution',
+  xLabel = '% of continent',
+}: {
+  pcts: Record<string, number>;
+  title?: string;
+  xLabel?: string;
+  yLabel?: string;
+}) {
   const data = Object.entries(pcts).map(([name, value]) => ({ name, value }));
   return (
     <div className="chart-block">
-      <h4>Remoteness Rank Distribution</h4>
-      <ResponsiveContainer width="100%" height={150}>
-        <BarChart data={data} layout="vertical" margin={{ top: 4, right: 40, left: 4, bottom: 0 }}>
+      <h4>{title}</h4>
+      <ResponsiveContainer width="100%" height={180}>
+        <BarChart data={data} layout="vertical" margin={{ top: 8, right: 40, left: 4, bottom: 28 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#2d4a6a" />
-          <XAxis type="number" tick={{ fill: '#94a3b8', fontSize: 9 }} unit="%" domain={[0, 100]} />
-          <YAxis dataKey="name" type="category" width={90} tick={{ fill: '#94a3b8', fontSize: 9 }} />
-          <Tooltip contentStyle={{ background: '#132337', border: '1px solid #2d4a6a', fontSize: 12 }}
-            formatter={(v: unknown) => [`${v}%`, '% of continent']} />
-          <Bar dataKey="value" radius={[0, 2, 2, 0]}>
+          <XAxis
+            type="number"
+            tick={{ fill: '#94a3b8', fontSize: 9 }}
+            unit="%"
+            domain={[0, 100]}
+            label={{ value: xLabel, position: 'insideBottom', offset: -18, fill: '#94a3b8', fontSize: 10 }}
+          />
+          <YAxis
+            dataKey="name"
+            type="category"
+            width={100}
+            tick={{ fill: '#94a3b8', fontSize: 9 }}
+          />
+          <Tooltip
+            contentStyle={{ background: '#132337', border: '1px solid #2d4a6a', fontSize: 12 }}
+            formatter={(v: unknown) => [`${v}%`, xLabel]}
+          />
+          <Bar dataKey="value" radius={[0, 2, 2, 0]} name={xLabel}>
             {data.map((_, i) => <Cell key={i} fill={RANK_COLORS[i % RANK_COLORS.length]} />)}
           </Bar>
         </BarChart>

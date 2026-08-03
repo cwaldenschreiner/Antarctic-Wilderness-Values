@@ -184,13 +184,13 @@ body {
 .chart-panel {
   grid-column: 1 / -1;
   display: flex;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
   background: var(--surface);
   border-top: 1px solid var(--border);
   overflow-x: auto;
   flex-shrink: 0;
-  align-items: flex-start;
+  align-items: stretch;
 }
 
 /* ── Section header with tooltip ─────────────────────────────────────────── */
@@ -338,10 +338,26 @@ body {
 .control-label { font-size: 0.8rem; color: var(--muted); }
 
 /* ── Stat cards ──────────────────────────────────────────────────────────── */
+.analytics-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  flex-shrink: 0;
+  min-width: 0;
+}
+.analytics-section-title {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ice);
+}
 .stat-cards {
   display: flex;
   gap: 0.6rem;
   flex-shrink: 0;
+  flex-wrap: wrap;
 }
 .stat-card {
   background: var(--surface2);
@@ -363,8 +379,13 @@ body {
 .stat-sub   { font-size: 0.65rem; color: var(--faint); margin-top: 0.15rem; }
 
 /* ── Charts ──────────────────────────────────────────────────────────────── */
-.chart-block { min-width: 240px; flex: 1; }
-.chart-block h4 { font-size: 0.78rem; color: var(--muted); margin-bottom: 0.4rem; font-weight: 500; }
+.chart-block { min-width: 260px; flex: 1; }
+.chart-block h4 {
+  font-size: 0.78rem;
+  color: var(--ice);
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
 
 /* ── Citation block ──────────────────────────────────────────────────────── */
 .citation-block {
