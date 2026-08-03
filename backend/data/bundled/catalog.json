@@ -57,15 +57,15 @@
       "tabs": ["remoteness", "wildness", "pristineness"]
     },
     {
-      "id": "ice_shelves",
-      "name": "Antarctic Ice Shelves (Natural Earth 10m)",
-      "source": "Natural Earth 10m Antarctic Ice Shelves",
-      "license": "Public domain",
-      "vintage": "2022",
+      "id": "place_names",
+      "name": "Antarctic Place Names",
+      "source": "ANT-MICI curated labels (regions, seas, ice shelves, major stations)",
+      "license": "Public domain / COMNAP station names",
+      "vintage": "2026",
       "crs": "EPSG:4326",
-      "n_features": 159,
-      "description": "Ice shelf polygons for basemap context under analysis overlays.",
-      "citation": "Natural Earth (naturalearthdata.com). Made with Natural Earth.",
+      "n_features": 44,
+      "description": "Reference place names shown on the interactive map for orientation.",
+      "citation": "Curated for ANT-MICI WP3 dashboard. Station coordinates align with COMNAP facilities where applicable.",
       "tabs": ["remoteness", "wildness", "pristineness"]
     }
   ],

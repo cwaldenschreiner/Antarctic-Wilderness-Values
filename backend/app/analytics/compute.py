@@ -116,6 +116,8 @@ def _make_png(
         alpha[valid] = (t[valid] * max_alpha).astype(np.uint8)
 
     rgba[:, :, 3] = alpha
+    # OpenLayers ImageStatic places image row 0 at maxY — flip so geographic north is up.
+    rgba = np.flipud(rgba)
     img = Image.fromarray(rgba, "RGBA")
     if PNG_DISPLAY_SCALE > 1:
         img = img.resize(
@@ -125,6 +127,18 @@ def _make_png(
     buf = io.BytesIO()
     img.save(buf, format="PNG", optimize=True)
     return base64.b64encode(buf.getvalue()).decode("ascii")
+
+
+def _encode_grid(arr_2d: np.ndarray) -> dict[str, Any]:
+    """Compact float32 grid for map identify (row 0 = north / maxY, matching PNG)."""
+    flipped = np.flipud(arr_2d.astype(np.float32))
+    packed = np.where(np.isfinite(flipped), flipped, np.float32(-1.0))
+    return {
+        "shape": [int(NY), int(NX)],
+        "extent": [-EXTENT_M, -EXTENT_M, EXTENT_M, EXTENT_M],
+        "nodata": -1.0,
+        "data_b64": base64.b64encode(np.ascontiguousarray(packed).tobytes()).decode("ascii"),
+    }
 
 
 def _full_grid(values: np.ndarray) -> np.ndarray:
@@ -187,13 +201,15 @@ def compute_remoteness(
     rank_pcts = {lbl: round(float((rank == i).sum() / N_CONT * 100), 1)
                  for i, lbl in enumerate(rank_labels)}
 
+    score_grid = _full_grid(score)
+    rank_grid = _full_grid(rank.astype(float))
     score_png = _make_png(
-        _full_grid(score),
+        score_grid,
         ["#1a0533", "#1565c0", "#0097a7", "#43a047", "#f9fbe7"],
     )
     # Rank 0 is a real class (<5 km), so keep all ranks opaque on-continent.
     rank_png = _make_png(
-        _full_grid(rank.astype(float)),
+        rank_grid,
         ["#d32f2f", "#f57c00", "#fbc02d", "#388e3c"],
         vmin=0,
         vmax=3,
@@ -202,6 +218,10 @@ def compute_remoteness(
     return {
         "score_png":        score_png,
         "rank_png":         rank_png,
+        "identify_grids": {
+            "score": _encode_grid(score_grid),
+            "rank":  _encode_grid(rank_grid),
+        },
         "raster_coords":    RASTER_COORDS,
         "rank_pcts":        rank_pcts,
         "mean_score":       round(float(score.mean()), 1),
@@ -256,13 +276,15 @@ def compute_wildness(
     impact_pct = round(100.0 - wild_pct, 1)
 
     # Score 0 = impacted and is a real class — keep it opaque on-continent.
+    wild_grid = _full_grid(score)
+    viewshed_grid = _full_grid(impacted.astype(float) * 100)
     wild_png = _make_png(
-        _full_grid(score),
+        wild_grid,
         ["#b71c1c", "#ef9a9a", "#fff9c4", "#66bb6a", "#1b5e20"],
     )
     # Presence overlay: only impacted cells are drawn; non-impacted stay clear.
     viewshed_png = _make_png(
-        _full_grid(impacted.astype(float) * 100),
+        viewshed_grid,
         ["#ef9a9a", "#b71c1c"],
         transparent_below=0.0,
         fade_span=1.0,
@@ -271,6 +293,10 @@ def compute_wildness(
     return {
         "wildness_png":         wild_png,
         "viewshed_png":         viewshed_png,
+        "identify_grids": {
+            "wild":     _encode_grid(wild_grid),
+            "viewshed": _encode_grid(viewshed_grid),
+        },
         "raster_coords":        RASTER_COORDS,
         "wild_pct":             wild_pct,
         "visible_impact_pct":   impact_pct,
@@ -348,13 +374,15 @@ def compute_pristineness(
     inv_pct = round(float(is_inv.sum() / N_CONT * 100), 1)
 
     # Score 0 = most modified and is a real class — keep it opaque on-continent.
+    prist_grid = _full_grid(score)
+    inv_grid = _full_grid(is_inv.astype(float) * 100)
     prist_png = _make_png(
-        _full_grid(score),
+        prist_grid,
         ["#37474f", "#0277bd", "#00897b", "#2e7d32", "#f9fbe7"],
     )
     # Presence overlay: only inviolate cells are drawn.
     inv_png = _make_png(
-        _full_grid(is_inv.astype(float) * 100),
+        inv_grid,
         ["#66bb6a", "#1b5e20"],
         transparent_below=0.0,
         fade_span=1.0,
@@ -363,6 +391,10 @@ def compute_pristineness(
     return {
         "pristineness_png":     prist_png,
         "inviolate_png":        inv_png,
+        "identify_grids": {
+            "prist":     _encode_grid(prist_grid),
+            "inviolate": _encode_grid(inv_grid),
+        },
         "raster_coords":        RASTER_COORDS,
         "inviolate_pct":        inv_pct,
         "inviolate_area_km2":   int(is_inv.sum() * CELL_KM2),

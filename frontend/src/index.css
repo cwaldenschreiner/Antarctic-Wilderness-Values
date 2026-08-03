@@ -153,6 +153,93 @@ body {
   background: var(--surface2);
   border-color: var(--accent);
 }
+.map-toolbar button.is-active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.map-view-wrap--identify .map-view {
+  cursor: crosshair;
+}
+
+.identify-panel {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 14;
+  width: min(260px, calc(100% - 5rem));
+  max-height: min(420px, calc(100% - 3rem));
+  overflow-y: auto;
+  background: rgba(19, 35, 55, 0.94);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.55rem 0.65rem 0.7rem;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+}
+.identify-panel header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.35rem;
+}
+.identify-panel header strong {
+  font-size: 0.78rem;
+  color: var(--ice);
+}
+.identify-panel header button {
+  background: none;
+  border: none;
+  color: var(--faint);
+  cursor: pointer;
+  font-size: 0.75rem;
+}
+.identify-coord {
+  margin: 0 0 0.45rem;
+  font-size: 0.68rem;
+  font-family: var(--mono);
+  color: var(--faint);
+}
+.identify-block {
+  border-top: 1px solid var(--border);
+  padding-top: 0.4rem;
+  margin-top: 0.4rem;
+}
+.identify-block h5 {
+  margin: 0 0 0.15rem;
+  font-size: 0.78rem;
+  color: var(--text);
+}
+.identify-block p {
+  margin: 0;
+  font-size: 0.74rem;
+  color: var(--muted);
+  font-family: var(--mono);
+}
+.identify-layer-tag {
+  font-family: var(--sans, system-ui) !important;
+  font-size: 0.65rem !important;
+  color: var(--faint) !important;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin-bottom: 0.25rem !important;
+}
+.identify-block dl { margin: 0.2rem 0 0; }
+.identify-row {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 0.25rem 0.4rem;
+  font-size: 0.7rem;
+  margin-bottom: 0.15rem;
+}
+.identify-row dt { color: var(--faint); margin: 0; }
+.identify-row dd { color: var(--muted); margin: 0; }
+.identify-empty {
+  margin: 0.35rem 0 0;
+  font-size: 0.72rem;
+  color: var(--faint);
+  line-height: 1.4;
+}
 
 .map-hint {
   position: absolute;

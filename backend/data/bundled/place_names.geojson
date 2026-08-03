@@ -1,0 +1,665 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "South Pole",
+        "kind": "pole",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -90.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Antarctic Peninsula",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -65.0,
+          -69.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "South Shetland Islands",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -59.0,
+          -62.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ross Sea",
+        "kind": "sea",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          175.0,
+          -75.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Weddell Sea",
+        "kind": "sea",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -45.0,
+          -73.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Amundsen Sea",
+        "kind": "sea",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -112.0,
+          -73.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Bellingshausen Sea",
+        "kind": "sea",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -85.0,
+          -70.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ross Ice Shelf",
+        "kind": "ice",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -175.0,
+          -81.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ronne Ice Shelf",
+        "kind": "ice",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -61.0,
+          -78.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Filchner Ice Shelf",
+        "kind": "ice",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -40.0,
+          -79.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Larsen Ice Shelf",
+        "kind": "ice",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -62.5,
+          -67.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "McMurdo Sound",
+        "kind": "sea",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          165.0,
+          -77.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Transantarctic Mountains",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          160.0,
+          -84.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "East Antarctica",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          80.0,
+          -80.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "West Antarctica",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -110.0,
+          -79.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Marie Byrd Land",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -130.0,
+          -78.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Queen Maud Land",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          5.0,
+          -72.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Victoria Land",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          165.0,
+          -74.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Wilkes Land",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          120.0,
+          -69.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Ellsworth Land",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -80.0,
+          -75.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Dronning Maud Land",
+        "kind": "region",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          15.0,
+          -72.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Adare",
+        "kind": "cape",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          170.2,
+          -71.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Cape Hallett",
+        "kind": "cape",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          170.3,
+          -72.3
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Deception Island",
+        "kind": "island",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -60.65,
+          -62.97
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "King George Island",
+        "kind": "island",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.4,
+          -62.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Elephant Island",
+        "kind": "island",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -55.1,
+          -61.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Peter I Island",
+        "kind": "island",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -90.6,
+          -68.8
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Balleny Islands",
+        "kind": "island",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          163.3,
+          -66.9
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Vostok Subglacial Lake",
+        "kind": "feature",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          106.0,
+          -77.5
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "McMurdo Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.668,
+          -77.851
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Amundsen\u2013Scott South Pole Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          0.0,
+          -90.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Palmer Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -64.053,
+          -64.774
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Rothera Research Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -68.13,
+          -67.57
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Concordia Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          123.35,
+          -75.1
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Casey Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          110.53,
+          -66.28
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Davis Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          77.97,
+          -68.58
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mawson Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          62.87,
+          -67.6
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Syowa Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          39.58,
+          -69.0
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Neumayer Station III",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -8.27,
+          -70.67
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Troll Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          2.53,
+          -72.01
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Scott Base",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          166.76,
+          -77.85
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Mario Zucchelli Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          164.12,
+          -74.69
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Zhongshan Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          76.38,
+          -69.37
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "name": "Great Wall Station",
+        "kind": "station",
+        "source": "ANT-MICI curated place names"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [
+          -58.96,
+          -62.22
+        ]
+      }
+    }
+  ]
+}

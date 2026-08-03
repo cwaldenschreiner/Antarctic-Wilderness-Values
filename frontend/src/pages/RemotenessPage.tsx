@@ -2,7 +2,8 @@ import { useCallback, useEffect, useState } from 'react';
 import { analyzeRemoteness, fetchPrecomputed, uploadFile } from '../api/client';
 import type { RemotenessResult, UploadResult, PrecomputedResponse } from '../api/client';
 import { MapView } from '../components/map/MapView';
-import type { RasterLayer } from '../components/map/MapView';
+import type { RasterLayer, OverlayLayer, IdentifyGrid } from '../components/map/MapView';
+import type { IdentifyGridPayload } from '../api/client';
 import {
   AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
   IndicatorIntro, UploadPanel, LayerLegend, HistogramChart, RankChart,
@@ -25,6 +26,10 @@ export function RemotenessPage() {
   const [opacity,      setOpacity]      = useState(0.8);
   const [showScore,    setShowScore]    = useState(true);
   const [showRank,     setShowRank]     = useState(false);
+  const [showFacilities, setShowFacilities] = useState(false);
+  const [showVisitors, setShowVisitors] = useState(false);
+  const [showPlaces,   setShowPlaces]   = useState(true);
+  const [grids, setGrids] = useState<Record<string, IdentifyGridPayload>>({});
 
   // Analysis params
   const [facDecay,  setFacDecay]  = useState(100);
@@ -40,6 +45,10 @@ export function RemotenessPage() {
           setResult({
             score_png:            pre.rasters.remoteness_score,
             rank_png:             pre.rasters.remoteness_rank || '',
+            identify_grids: {
+              score: pre.grids?.remoteness_score,
+              rank: pre.grids?.remoteness_rank,
+            },
             raster_coords:        pre.raster_coords,
             rank_pcts:            pre.stats.remoteness?.rank_pcts || {},
             mean_score:           pre.stats.remoteness?.mean_score || 0,
@@ -51,6 +60,7 @@ export function RemotenessPage() {
             n_visitor_sites:      331,
             params:               {},
           } as RemotenessResult);
+          if (pre.grids) setGrids(pre.grids);
         }
       })
       .catch(() => {})
@@ -68,6 +78,12 @@ export function RemotenessPage() {
         merge_uploaded:    mergeUpload,
       });
       setResult(data);
+      if (data.identify_grids) {
+        setGrids({
+          remoteness_score: data.identify_grids.score,
+          remoteness_rank: data.identify_grids.rank,
+        });
+      }
     } catch (e: unknown) {
       setError(String(e));
     } finally {
@@ -87,6 +103,19 @@ export function RemotenessPage() {
   const rasters: RasterLayer[] = [
     ...(result?.score_png ? [{ id: 'score', png_base64: result.score_png, coords, opacity, visible: showScore }] : []),
     ...(result?.rank_png  ? [{ id: 'rank',  png_base64: result.rank_png,  coords, opacity, visible: showRank  }] : []),
+  ];
+  const overlayLayers: OverlayLayer[] = [
+    { id: 'facilities', visible: showFacilities },
+    { id: 'visitor_sites', visible: showVisitors },
+    { id: 'place_names', visible: showPlaces },
+  ];
+  const identifyGrids: IdentifyGrid[] = [
+    ...(grids.remoteness_score && showScore
+      ? [{ id: 'score', label: 'Remoteness score', visible: true, grid: grids.remoteness_score }]
+      : []),
+    ...(grids.remoteness_rank && showRank
+      ? [{ id: 'rank', label: 'Remoteness rank', visible: true, grid: grids.remoteness_rank }]
+      : []),
   ];
 
   return (
@@ -129,7 +158,7 @@ export function RemotenessPage() {
       }
       map={
         <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
-          <MapView rasters={rasters} />
+          <MapView rasters={rasters} overlays={overlayLayers} identifyGrids={identifyGrids} />
           {loading && <LoadingOverlay />}
           {error && <ErrorBanner error={error} onDismiss={() => setError(null)} />}
         </div>
@@ -161,6 +190,27 @@ export function RemotenessPage() {
                 { color: '#388e3c', label: '>50 km (High)' },
               ],
             },
+          },
+          {
+            id: 'facilities',
+            label: 'COMNAP facilities',
+            visible: showFacilities,
+            onToggle: () => setShowFacilities(v => !v),
+            style: { kind: 'solid', color: '#f59e0b' },
+          },
+          {
+            id: 'visitors',
+            label: 'Visitor sites',
+            visible: showVisitors,
+            onToggle: () => setShowVisitors(v => !v),
+            style: { kind: 'solid', color: '#38bdf8' },
+          },
+          {
+            id: 'places',
+            label: 'Place names',
+            visible: showPlaces,
+            onToggle: () => setShowPlaces(v => !v),
+            style: { kind: 'solid', color: '#e2e8f0' },
           },
         ]} />
       }

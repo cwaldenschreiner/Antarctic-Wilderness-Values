@@ -103,8 +103,11 @@ def precomputed():
         png = _load_precomputed_png(key)
         if png:
             rasters[key] = png
+    grids_path = DATA_DIR / "precomputed_grids.json"
+    grids = json.loads(grids_path.read_text()) if grids_path.exists() else {}
     return {
         "rasters": rasters,
+        "grids": grids,
         "stats": stats,
         "raster_coords": RASTER_COORDS,
     }
