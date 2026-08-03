@@ -5,13 +5,12 @@ import { MapView } from '../components/map/MapView';
 import type { RasterLayer } from '../components/map/MapView';
 import {
   AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
-  UploadPanel, LayerLegend, HistogramChart, RankChart,
+  IndicatorIntro, UploadPanel, LayerLegend, HistogramChart, RankChart,
   LoadingOverlay, ErrorBanner,
 } from '../components/shared';
 
-const RASTER_TOOLTIP = 'The remoteness score (0–100) measures how far each 50 km grid cell is from human infrastructure and visitor sites. Higher scores = more remote. The rank layer classifies cells into four categories (< 5 km, 5–20 km, 20–50 km, > 50 km from nearest human activity) following IP 39 Table 4 thresholds.';
-const RANK_TOOLTIP   = 'Ranks follow Summerson & Bishop (2012) and ATCM XXXVI IP 39 (New Zealand, 2013) Table 4 thresholds: < 5 km = Low remoteness (heavily impacted), 5–20 km = Moderate, 20–50 km = High-Moderate, > 50 km = High remoteness.';
-const HIST_TOOLTIP   = 'Distribution of remoteness scores across all 9,841 Antarctic grid cells (50 km resolution, EPSG:3031). A score of 100 indicates the cell is maximally remote from all known human activity.';
+const RASTER_TOOLTIP =
+  'Remoteness analysis: for each 50 km Antarctic grid cell (EPSG:3031), distance is measured to COMNAP facilities and ATS visitor sites. Exponential decay converts distance into an impact score; remoteness = 100 − impact. Outputs: (1) Remoteness Score map 0–100 (higher = more isolated); (2) Remoteness Rank map with IP 39 Table 4 classes (<5, 5–20, 20–50, >50 km); (3) summary metrics and histograms below the map.';
 
 const DEFAULT_COORDS: [[number,number],[number,number],[number,number],[number,number]] =
   [[-180,-55],[180,-55],[180,-85.05],[-180,-85.05]];
@@ -95,10 +94,11 @@ export function RemotenessPage() {
       controls={
         <div className="control-body">
           <SectionHeader title="Remoteness Indicators" tooltip={RASTER_TOOLTIP} />
-          <p className="indicator-note">
-            Isolation from human infrastructure and visitor activity.
-            Methods follow IP 39 Table 1 & 4 (New Zealand, 2013) and Summerson &amp; Bishop (2012).
-          </p>
+          <IndicatorIntro
+            summary="Isolation from human infrastructure and visitor activity, following IP 39 Tables 1 & 4 (New Zealand, 2013) and Summerson & Bishop (2012)."
+            analysis="Run Analysis builds a continent-wide 50 km grid and measures distance from each cell to COMNAP facilities and ATS visitor sites. Facility and visitor decay radii (and visitor weight) control how quickly human presence fades with distance. Optional uploads can add or replace infrastructure points."
+            outputs="The map shows a Remoteness Score (0–100; higher = more remote) and an optional Remoteness Rank layer (<5 km, 5–20 km, 20–50 km, >50 km). Below the map: share/area of high-remoteness cells, mean score, facility count, rank distribution, and score histogram."
+          />
 
           <div className="param-section">
             <h4>Analysis Parameters</h4>

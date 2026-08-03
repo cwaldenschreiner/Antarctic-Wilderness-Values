@@ -5,11 +5,12 @@ import { MapView } from '../components/map/MapView';
 import type { RasterLayer } from '../components/map/MapView';
 import {
   AnalysisLayout, SectionHeader, ParamSlider, StatCard, AnalyticsSection,
-  UploadPanel, LayerLegend, HistogramChart,
+  IndicatorIntro, UploadPanel, LayerLegend, HistogramChart,
   LoadingOverlay, ErrorBanner,
 } from '../components/shared';
 
-const PRIST_TOOLTIP = 'Pristineness measures the degree to which an area remains unmodified by human activity. The score (0–100) combines the Leihy et al. (2020) inviolate wilderness baseline (50 km grid cells with no recorded human visitation 1819–2018) with a visit-intensity penalty derived from ATS visitor site records. Inviolate cells score 50–100; non-inviolate cells score 0–60.';
+const PRIST_TOOLTIP =
+  'Pristineness analysis: combines the Leihy et al. (2020) inviolate wilderness baseline (no recorded visitation 1819–2018) with a visit-intensity decay from ATS sites. Inviolate cells score 50–100; other cells score 0–60. Outputs: (1) Pristineness Index map 0–100; (2) Inviolate Areas mask; (3) inviolate %, extent, patch stats, and score histogram below the map.';
 const BASE_DECAY_TOOLTIP = 'Baseline exponential decay distance (km) from visitor sites with low visit counts. At this distance from a low-traffic site, visit impact drops to ~37%.';
 const MAX_DECAY_TOOLTIP = 'Additional decay added for high-traffic sites (log-scaled by 5-year visit total). High-traffic Peninsula sites (e.g. Neko Harbour: 76,214 visits) receive a much wider impact radius than remote, rarely-visited sites.';
 const INVIOLATE_TOOLTIP = 'The inviolate wilderness layer is taken directly from Leihy, R.I. et al. (2020) "Antarctica\'s wilderness fails to capture continent\'s biodiversity", Nature 583:567–571. It identifies 1,733 grid cells (4.3 million km²) with no recorded human visitation across ~2.7 million activity records spanning 1819–2018.';
@@ -94,11 +95,11 @@ export function PristinenessPage() {
       controls={
         <div className="control-body">
           <SectionHeader title="Pristineness Indicators" tooltip={PRIST_TOOLTIP} />
-          <p className="indicator-note">
-            Inviolate areas and human activity footprint. Baseline from Leihy et al. (2020)
-            inviolate wilderness (no recorded human visitation 1819–2018), modulated by
-            ATS visitor site intensity.
-          </p>
+          <IndicatorIntro
+            summary="Degree of human modification: Leihy et al. (2020) inviolate wilderness baseline plus ATS visitor-site intensity."
+            analysis="Run Analysis scores each 50 km cell using inviolate status and distance-weighted visit impact. Base and max visit-decay radii control how far high-traffic sites reduce pristineness. Optional uploads can add footprints that further lower scores."
+            outputs="The map shows the Pristineness Index (0–100; higher = less modified) and an optional Inviolate Areas mask. Below the map: inviolate share and extent, number of contiguous patches, largest patch size, score histogram, and data-source citations."
+          />
 
           <div className="param-section">
             <h4>Analysis Parameters</h4>
