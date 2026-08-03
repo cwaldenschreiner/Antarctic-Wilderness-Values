@@ -70,12 +70,47 @@ def load_precomputed_stats() -> dict:
 
 # ── Raster utilities ───────────────────────────────────────────────────────────
 
-def _make_png(arr_2d: np.ndarray, colors: list[str],
-              vmin: float = 0, vmax: float = 100) -> str:
-    norm = np.clip((arr_2d - vmin) / max(vmax - vmin, 1e-6), 0, 1)
+def _make_png(
+    arr_2d: np.ndarray,
+    colors: list[str],
+    vmin: float = 0,
+    vmax: float = 100,
+    *,
+    max_alpha: int = 200,
+    transparent_below: float | None = None,
+    fade_span: float | None = None,
+) -> str:
+    """Render a float grid to a base64 PNG.
+
+    Values outside the continent mask or NaN are fully transparent.
+    When ``transparent_below`` is set, values at or below that threshold are
+    also transparent (negligible / zero signal). Alpha then soft-ramps over
+    ``fade_span`` up to ``max_alpha``.
+    """
+    span = max(vmax - vmin, 1e-6)
+    norm = np.clip((arr_2d - vmin) / span, 0, 1)
     cmap = LinearSegmentedColormap.from_list("c", colors, N=256)
+    # Force colormap RGB only; we own the alpha channel below.
     rgba = (cmap(norm) * 255).astype(np.uint8)
-    alpha = (CONT_MASK.reshape(NY, NX) * 200).astype(np.uint8)
+
+    cont = CONT_MASK.reshape(NY, NX)
+    valid = cont & np.isfinite(arr_2d)
+    alpha = np.zeros((NY, NX), dtype=np.uint8)
+
+    if transparent_below is None:
+        alpha[valid] = max_alpha
+    else:
+        # Soft fade so negligible values disappear instead of painting the basemap.
+        fade = fade_span if fade_span is not None else max(span * 0.05, 1e-6)
+        t = np.zeros_like(arr_2d, dtype=np.float64)
+        above = valid & (arr_2d > transparent_below)
+        t[above] = np.clip(
+            (arr_2d[above] - transparent_below) / max(fade, 1e-6),
+            0.0,
+            1.0,
+        )
+        alpha[valid] = (t[valid] * max_alpha).astype(np.uint8)
+
     rgba[:, :, 3] = alpha
     buf = io.BytesIO()
     Image.fromarray(rgba, "RGBA").save(buf, format="PNG")
@@ -142,10 +177,19 @@ def compute_remoteness(
     rank_pcts = {lbl: round(float((rank == i).sum() / N_CONT * 100), 1)
                  for i, lbl in enumerate(rank_labels)}
 
-    score_png = _make_png(_full_grid(score),
-        ["#1a0533", "#1565c0", "#0097a7", "#43a047", "#f9fbe7"])
-    rank_png = _make_png(_full_grid(rank.astype(float)),
-        ["#d32f2f", "#f57c00", "#fbc02d", "#388e3c"], vmin=0, vmax=3)
+    score_png = _make_png(
+        _full_grid(score),
+        ["#1a0533", "#1565c0", "#0097a7", "#43a047", "#f9fbe7"],
+        transparent_below=0.0,
+        fade_span=5.0,
+    )
+    # Rank 0 is a real class (<5 km), so keep all ranks opaque on-continent.
+    rank_png = _make_png(
+        _full_grid(rank.astype(float)),
+        ["#d32f2f", "#f57c00", "#fbc02d", "#388e3c"],
+        vmin=0,
+        vmax=3,
+    )
 
     return {
         "score_png":        score_png,
@@ -203,10 +247,19 @@ def compute_wildness(
     wild_pct   = round(float((~impacted).sum() / N_CONT * 100), 1)
     impact_pct = round(100.0 - wild_pct, 1)
 
-    wild_png = _make_png(_full_grid(score),
-        ["#b71c1c", "#ef9a9a", "#fff9c4", "#66bb6a", "#1b5e20"])
-    viewshed_png = _make_png(_full_grid(impacted.astype(float) * 100),
-        ["#ffffff00", "#ef9a9a", "#b71c1c"])
+    wild_png = _make_png(
+        _full_grid(score),
+        ["#b71c1c", "#ef9a9a", "#fff9c4", "#66bb6a", "#1b5e20"],
+        transparent_below=0.0,
+        fade_span=1.0,
+    )
+    # Binary impact mask: only impacted cells are visible.
+    viewshed_png = _make_png(
+        _full_grid(impacted.astype(float) * 100),
+        ["#ef9a9a", "#b71c1c"],
+        transparent_below=0.0,
+        fade_span=1.0,
+    )
 
     return {
         "wildness_png":         wild_png,
@@ -287,10 +340,19 @@ def compute_pristineness(
 
     inv_pct = round(float(is_inv.sum() / N_CONT * 100), 1)
 
-    prist_png = _make_png(_full_grid(score),
-        ["#37474f", "#0277bd", "#00897b", "#2e7d32", "#f9fbe7"])
-    inv_png = _make_png(_full_grid(is_inv.astype(float) * 100),
-        ["#212121", "#1b5e20"])
+    prist_png = _make_png(
+        _full_grid(score),
+        ["#37474f", "#0277bd", "#00897b", "#2e7d32", "#f9fbe7"],
+        transparent_below=0.0,
+        fade_span=5.0,
+    )
+    # Binary inviolate mask: non-inviolate cells stay fully transparent.
+    inv_png = _make_png(
+        _full_grid(is_inv.astype(float) * 100),
+        ["#66bb6a", "#1b5e20"],
+        transparent_below=0.0,
+        fade_span=1.0,
+    )
 
     return {
         "pristineness_png":     prist_png,

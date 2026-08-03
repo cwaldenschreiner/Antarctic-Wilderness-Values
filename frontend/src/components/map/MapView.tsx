@@ -6,6 +6,10 @@
  * Rasters:  PNG images generated natively in EPSG:3031 pixel space,
  *           declared with projection='EPSG:3031' and extent ±3,000,000 m.
  *           Zero reprojection error.
+ *
+ * Interaction: pan, scroll/pinch zoom, and rotate (Alt+Shift-drag, or toolbar).
+ * OpenLayers is 2D — this is not a 3D globe, but the polar view can be spun
+ * around the South Pole like turning a paper map.
  */
 
 import { useEffect, useRef } from 'react';
@@ -19,12 +23,15 @@ import ImageStatic from 'ol/source/ImageStatic';
 import GeoJSON from 'ol/format/GeoJSON';
 import Feature from 'ol/Feature';
 import Polygon from 'ol/geom/Polygon';
+import { defaults as defaultControls } from 'ol/control/defaults';
+import { defaults as defaultInteractions } from 'ol/interaction/defaults';
+import DragRotate from 'ol/interaction/DragRotate';
+import { shiftKeyOnly } from 'ol/events/condition';
 import { register } from 'ol/proj/proj4';
 import { get as getProjection } from 'ol/proj';
 import { Fill, Stroke, Style } from 'ol/style';
 import type { Extent } from 'ol/extent';
 import 'ol/ol.css';
-
 // ── Register EPSG:3031 ────────────────────────────────────────────────────────
 proj4.defs(
   'EPSG:3031',
@@ -37,13 +44,14 @@ const PROJ_3031 = getProjection('EPSG:3031')!;
 PROJ_3031.setExtent([-3333134, -3333134, 3333134, 3333134]);
 PROJ_3031.setWorldExtent([-180, -90, 180, -60]);
 
-// Rasters are 600×600 px generated natively in EPSG:3031, covering ±3,000,000 m
+// Rasters are generated natively in EPSG:3031 at analysis resolution, covering ±3,000,000 m
 const RASTER_EXTENT: Extent = [-3000000, -3000000, 3000000, 3000000];
 
 // Initial view: Antarctic continent ±2,800 km from pole
 const ANTARCTIC_EXTENT: Extent = [-2800000, -2800000, 2800000, 2800000];
 
 const API_BASE = (import.meta.env.VITE_API_URL as string) || '/api';
+const ROTATE_STEP = Math.PI / 6; // 30°
 
 // ── Styles ────────────────────────────────────────────────────────────────────
 const OCEAN_STYLE  = new Style({ fill: new Fill({ color: '#0d1f35' }) });
@@ -97,6 +105,21 @@ export function MapView({ rasters }: Props) {
 
     const map = new Map({
       target: containerRef.current,
+      controls: defaultControls({
+        zoom: false,
+        rotate: false,
+        attribution: false,
+      }),
+      interactions: defaultInteractions({
+        altShiftDragRotate: true,
+        pinchRotate: true,
+        dragPan: true,
+        mouseWheelZoom: true,
+        doubleClickZoom: true,
+      }).extend([
+        // Also allow Shift-drag rotate (in addition to Alt+Shift).
+        new DragRotate({ condition: shiftKeyOnly }),
+      ]),
       layers: [
         makeOceanLayer(),
         new VectorLayer({
@@ -111,6 +134,7 @@ export function MapView({ rasters }: Props) {
         zoom: 1,
         minZoom: 0,
         maxZoom: 14,
+        enableRotation: true,
       }),
     });
 
@@ -174,11 +198,51 @@ export function MapView({ rasters }: Props) {
     });
   }, [rasters]);
 
+  const withView = (fn: (view: View) => void) => {
+    const view = mapRef.current?.getView();
+    if (view) fn(view);
+  };
+
+  const zoomBy = (delta: number) => {
+    withView(view => {
+      const z = view.getZoom();
+      if (z != null) view.animate({ zoom: z + delta, duration: 180 });
+    });
+  };
+
+  const rotateBy = (radians: number) => {
+    withView(view => {
+      view.animate({ rotation: (view.getRotation() || 0) + radians, duration: 220 });
+    });
+  };
+
+  const resetView = () => {
+    const map = mapRef.current;
+    if (!map) return;
+    const view = map.getView();
+    view.animate({ rotation: 0, duration: 200 });
+    view.fit(ANTARCTIC_EXTENT, {
+      size: map.getSize() ?? [800, 600],
+      padding: [24, 24, 24, 24],
+      duration: 280,
+    });
+  };
+
   return (
-    <div
-      ref={containerRef}
-      className="map-view"
-      style={{ width: '100%', height: '100%', background: '#0d1f35' }}
-    />
+    <div className="map-view-wrap">
+      <div
+        ref={containerRef}
+        className="map-view"
+        style={{ width: '100%', height: '100%', background: '#0d1f35' }}
+      />
+      <div className="map-toolbar" role="toolbar" aria-label="Map controls">
+        <button type="button" title="Zoom in" onClick={() => zoomBy(1)}>+</button>
+        <button type="button" title="Zoom out" onClick={() => zoomBy(-1)}>−</button>
+        <button type="button" title="Rotate left (or Shift-drag)" onClick={() => rotateBy(-ROTATE_STEP)}>↺</button>
+        <button type="button" title="Rotate right (or Shift-drag)" onClick={() => rotateBy(ROTATE_STEP)}>↻</button>
+        <button type="button" title="Reset view" onClick={resetView}>⌂</button>
+      </div>
+      <p className="map-hint">Drag to pan · scroll to zoom · Shift-drag or buttons to rotate</p>
+    </div>
   );
 }
