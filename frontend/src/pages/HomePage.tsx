@@ -17,7 +17,7 @@ export function HomePage() {
           </p>
           <p className="home-credits-team">
             Team: <strong>Dr. Yu-Fai Leung</strong>, <strong>Dr. Daniela Cajiao</strong>,{' '}
-            <strong>Courtney Hotchkiss</strong>, <strong>Dr. Chelsey Walden-Schreiner</strong>
+            <strong>Dr. Courtney Hotchkiss</strong>, <strong>Dr. Chelsey Walden-Schreiner</strong>
           </p>
         </aside>
       </header>
