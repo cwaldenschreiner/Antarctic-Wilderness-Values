@@ -7,6 +7,9 @@ export function HomePage() {
         <div className="hero-text">
           <h1>Antarctic Wilderness Values Dashboard</h1>
           <p className="subtitle">ANT-MICI · WP3 — Monitoring cumulative impacts on wilderness character</p>
+          <p className="hero-byline">
+            Dashboard developed by <strong>Dr. Chelsey Walden-Schreiner</strong>
+          </p>
           <p>
             Antarctic tourism has grown for over 30 years, raising concerns about cumulative impacts
             on biodiversity and wilderness values. This dashboard is part of{' '}
@@ -58,6 +61,17 @@ export function HomePage() {
           <span className="ind-link">Explore →</span>
         </a>
       </section>
+
+      <footer className="home-credits">
+        <h2>Project team</h2>
+        <p className="home-credits-org">
+          Antarctic Wilderness Values project · North Carolina State University
+        </p>
+        <p className="home-credits-led">
+          Led by <strong>Dr. Yu-Fai Leung</strong>, <strong>Courtney Hotchkiss</strong>, and{' '}
+          <strong>Dr. Daniela Cajiao</strong>
+        </p>
+      </footer>
     </div>
   );
 }
