@@ -68,7 +68,7 @@ export function HomePage() {
           Antarctic Wilderness Values project · North Carolina State University
         </p>
         <p className="home-credits-led">
-          Led by <strong>Dr. Yu-Fai Leung</strong>, <strong>Ms. Courtney Hotchkiss</strong>, and{' '}
+          Led by <strong>Dr. Yu-Fai Leung</strong>, <strong>Courtney Hotchkiss</strong>, and{' '}
           <strong>Dr. Daniela Cajiao</strong>
         </p>
       </footer>
