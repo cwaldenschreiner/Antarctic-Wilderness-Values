@@ -737,18 +737,20 @@ body {
   line-height: 1.4 !important;
 }
 .home-credits-led,
-.home-credits-dev {
+.home-credits-dev,
+.home-credits-team {
   color: var(--muted) !important;
   font-size: 0.88rem !important;
   line-height: 1.55 !important;
   margin-bottom: 0.25rem !important;
 }
-.home-credits-dev {
+.home-credits-team {
   margin-bottom: 0 !important;
   margin-top: 0.15rem;
 }
 .home-credits-led strong,
-.home-credits-dev strong {
+.home-credits-dev strong,
+.home-credits-team strong {
   color: var(--ice);
   font-weight: 600;
 }

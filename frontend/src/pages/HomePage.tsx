@@ -7,16 +7,17 @@ export function HomePage() {
         <h1>Antarctic Wilderness Values Dashboard</h1>
         <p className="subtitle">ANT-MICI · WP3 — Monitoring cumulative impacts on wilderness character</p>
         <aside className="home-credits">
-          <h2>Project team</h2>
-          <p className="home-credits-org">
-            Antarctic Wilderness Values project · North Carolina State University
-          </p>
+          <h2>Project Team</h2>
+          <p className="home-credits-org">Antarctic Wilderness Values</p>
           <p className="home-credits-led">
-            Led by <strong>Dr. Yu-Fai Leung</strong>, <strong>Courtney Hotchkiss</strong>, and{' '}
-            <strong>Dr. Daniela Cajiao</strong>
+            Led by: <strong>Dr. Yu-Fai Leung</strong>
           </p>
           <p className="home-credits-dev">
-            Dashboard developed by <strong>Dr. Chelsey Walden-Schreiner</strong>
+            Dashboard and analytics developed by: <strong>Dr. Chelsey Walden-Schreiner</strong>
+          </p>
+          <p className="home-credits-team">
+            Team: <strong>Dr. Yu-Fai Leung</strong>, <strong>Dr. Daniela Cajiao</strong>,{' '}
+            <strong>Courtney Hotchkiss</strong>, <strong>Dr. Chelsey Walden-Schreiner</strong>
           </p>
         </aside>
       </header>
