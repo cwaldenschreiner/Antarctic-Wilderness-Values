@@ -661,7 +661,18 @@ body {
   .hero-diagram { display: none; }
 }
 .hero-text h1 { font-size: 1.75rem; color: var(--ice); line-height: 1.25; margin-bottom: 0.5rem; }
-.subtitle { color: var(--accent); font-size: 0.9rem; margin-bottom: 0.85rem; }
+.subtitle { color: var(--accent); font-size: 0.9rem; margin-bottom: 0.45rem; }
+.hero-byline {
+  color: var(--ice) !important;
+  font-size: 0.98rem !important;
+  font-weight: 500;
+  margin-bottom: 0.85rem !important;
+  letter-spacing: 0.01em;
+}
+.hero-byline strong {
+  color: var(--ice);
+  font-weight: 700;
+}
 .hero-text p { color: var(--muted); line-height: 1.65; font-size: 0.9rem; margin-bottom: 0.6rem; }
 .hero-badges { display: flex; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.85rem; }
 .badge {
@@ -700,6 +711,41 @@ body {
 .ind-card--green h2, .ind-card--green .ind-link { color: var(--green); }
 .ind-card--teal  { border-left: 3px solid var(--teal);    }
 .ind-card--teal  h2, .ind-card--teal  .ind-link { color: var(--teal); }
+
+/* ── Home credits ────────────────────────────────────────────────────────── */
+.home-credits {
+  margin-top: 2.25rem;
+  padding: 1.25rem 1.35rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
+  border-radius: 0 0 12px 12px;
+  border: 1px solid var(--border);
+}
+.home-credits h2 {
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--faint);
+  margin: 0 0 0.55rem;
+  font-weight: 600;
+}
+.home-credits-org {
+  color: var(--ice) !important;
+  font-size: 0.95rem !important;
+  font-weight: 600;
+  margin-bottom: 0.35rem !important;
+  line-height: 1.4 !important;
+}
+.home-credits-led {
+  color: var(--muted) !important;
+  font-size: 0.88rem !important;
+  line-height: 1.55 !important;
+  margin-bottom: 0 !important;
+}
+.home-credits-led strong {
+  color: var(--ice);
+  font-weight: 600;
+}
 
 /* ── Data sources page ───────────────────────────────────────────────────── */
 .data-sources-page {
